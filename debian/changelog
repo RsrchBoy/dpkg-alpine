@@ -1,0 +1,330 @@
+alpine (2.10+dfsg-1) unstable; urgency=low
+
+  * New upstream release.
+  * This release ships a fix for an issue where the PREFDATETIME token
+    was always set to "Sun" incorrectly. (Closes: #692870)
+  * This release ships a fix for IMAP-encoded non-ASCII folder names.
+    (Closes: #674067)
+  * This release simplifies (and corrects) S/MIME handling for messages
+    that encrypted *and* signed. (Closes: #653420)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Sun, 19 May 2013 16:15:01 -0700
+
+alpine (2.02+dfsg-2) unstable; urgency=low
+
+  * Adding patch from Geoffrey Thomas to disable broken phone-
+    home functionality. (Thank you!) (Closes: #631758)
+  * Adding dependency on mlock so that alpine no longer warns
+    the user about permissions on /var/spool/mail (or /var/mail).
+    (In theory, this new dependency is only required if you are using
+    an mbox file, but since reading system mail is within the core
+    functionality of alpine, it seems sensible that alpine should do that
+    without warnings out of the box.) (Closes: #414264)
+  * ACKing NMU by Johnathan McCrohan. Thank you!
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Sun, 26 Aug 2012 13:23:07 -0700
+
+alpine (2.02+dfsg-1.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Apply upstream patch disabling DES-56 to ensure RFC 5751 compliance.
+    (Closes: #657046)
+    - Upstream commit e2eef589799d742ea6ccaec9144dc619a516222e added as
+      70_des56_rfc5751.patch
+
+ -- Jonathan McCrohan <jmccrohan@gmail.com>  Sat, 08 Sep 2012 16:07:59 +0100
+
+alpine (2.02+dfsg-1) unstable; urgency=medium
+
+  * ACK'd non-maintainer upload by tolimar. (Thank you!)
+  * Removed Windows (and other) binaries from ldap/binaries/* and
+    pico/msmem.c and alpine/ldap32.dll. This is now documented in
+    debian/copyright. (Closes: #641479)
+  * Configuring debian/rules for hardening flags, as per release goal.
+    (Therefore, this release adds a versioned dpkg dependency.)
+  * Set urgency to medium due to fix for release-critical bug.
+  * Bump the Standards-Version to 3.9.3; no changes since 3.9.1 affect
+    this package.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Mon, 02 Jul 2012 16:44:02 -0600
+
+alpine (2.02-3.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Add patch from Eric Alexander to solve the format not a string or
+    literal compiler error (Closes: #643349)
+    (Added as debian/patches/60_fix_string_error.patch)
+  * Set urgency to medium due to rc bug fix
+
+ -- Alexander Reichle-Schmehl <tolimar@debian.org>  Fri, 02 Dec 2011 15:14:18 +0100
+
+alpine (2.02-3) unstable; urgency=low
+
+  * Explicitly list libraries needed by c-client.a to a patch.
+    Thanks to Alex Chiang and Evan Broder. (Closes: #601464 #601801)
+  * Remove unnecessary dependency on quilt.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Mon, 01 Nov 2010 21:25:52 -0400
+
+alpine (2.02-2) unstable; urgency=low
+
+  * Add self to uploaders. 
+  * Update homepage and watchfile for new upstream.
+  * alpine now Conflicts: and Replaces: pine. (Closes: #482330)
+  * Include -doc package.
+    - Add alpine-doc to alpine's Recommends:.
+  * Depend on ${misc:Depends} substitution variable.
+  * Bump standards version to 3.9.1, no changes needed.
+  * Switch to dpkg-source 3.0 (quilt) format.
+    - Refreshed patches.
+
+ -- Luke Faraone <lfaraone@debian.org>  Sat, 16 Oct 2010 07:44:26 -0400
+
+alpine (2.02-1) unstable; urgency=low
+
+  * New upstream release, based on re-alpine project
+  * Updated debian/copyright to reflect this fact
+  * re-alpine removed the non-free from the tarball, so now
+    we do not repack the upstream tarball. (Yay!)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Sun, 03 Oct 2010 15:31:55 -0400
+
+alpine (2.00+dfsg-6) unstable; urgency=low
+
+  * Add diversion for pico and remove conflict with nano.
+    (Closes: #415169)
+  * Build-depend on aspell. This makes it always build correctly with
+    spell-checking support. (LP: #340993)
+  * Change section of alpine-debug to "debug", fixing the override disparity.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Fri, 11 Dec 2009 15:49:07 -0500
+
+alpine (2.00+dfsg-5) unstable; urgency=low
+
+  * Remove memory leak from pico/composer.c. Thanks to George Danchev for
+    finding the issue and submitting a patch. (Closes: #534984)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Wed, 09 Dec 2009 09:38:50 -0500
+
+alpine (2.00+dfsg-4) unstable; urgency=low
+
+  * Changed debian/control to not use backslashes for line
+    continuations. Thanks to Cyril Brulebois (kibi)! (Closes: #535279). 
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Tue, 07 Jul 2009 14:30:09 -0400
+
+alpine (2.00+dfsg-3) unstable; urgency=low
+
+  * Add Barry deFreese's little patch to fix building on Debian GNU/Hurd.
+    (Closes: #532533)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Tue, 23 Jun 2009 11:15:38 -0400
+
+alpine (2.00+dfsg-2) unstable; urgency=low
+
+  * Update to package description: note that Alpine is no longer in
+    alpha. (Closes: #499640)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Tue, 23 Sep 2008 12:17:56 -0700
+
+alpine (2.00+dfsg-1) unstable; urgency=low
+
+  [ Andreas Tille ]
+  * New upstream version
+  * Use quilt to apply patches
+  * Standards-Version: 3.8.0 (no changes needed)
+  * Added Vcs fields for collab-maint svn at alioth
+  * Replaced explicit mentioning Apache license in copyright
+    by hint to /usr/share/common-licenses/Apache-2.0 and
+    added copyright of packaging stuff
+  * Use cdbs and debhelper files instead of moving files
+    manually in debian/rules
+  [ Asheesh Laroia ]
+  * Bumped version number to 2.00+dfsg
+  * Minimized alpine/Makefile.in patch
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Sun, 14 Sep 2008 14:09:17 -0700
+
+alpine (1.10+dfsg-4) unstable; urgency=low
+
+  * Er, re-adding patch for kFreeBSD (which got included in upstream).
+    (Closes: #494314)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Mon, 11 Aug 2008 02:29:12 -0300
+
+alpine (1.10+dfsg-3) unstable; urgency=low
+
+  * Er, re-re-add patch to configure.ac for arm gnueabi (Closes: #471519)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Wed, 19 Mar 2008 12:03:02 -0700
+
+alpine (1.10+dfsg-2) unstable; urgency=low
+
+  * Re-add patch to configure.ac that fixes arm gnueabi (Closes: #471519)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Tue, 18 Mar 2008 11:00:12 -0700
+
+alpine (1.10+dfsg-1) unstable; urgency=low
+
+  * New upstream release.
+  * Removed configure.ac patch because upstream fixed krb5.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Mon, 17 Mar 2008 22:13:21 -0700
+
+alpine (1.0+dfsg-4) unstable; urgency=low
+
+  * Adding patch from upstream configure.ac to fix krb5;
+    thanks to Per Olofsson for the clean patch (Closes: #455359)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Fri, 15 Feb 2008 14:21:41 -0800
+
+alpine (1.0+dfsg-3) unstable; urgency=low
+
+  * Resolved serious conflict with uw-mailutil. (Closes: #460695)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Mon, 14 Jan 2008 12:12:50 -0800
+
+alpine (1.0+dfsg-2) unstable; urgency=low
+
+  * Link with libraries as needed (incomplete fix for #460327).
+  * Include mailutil binary also. (Closes: #459920)
+  * Don't enable debug by default. (Closes: #459661)
+  * Trying to fix krb5.
+  * Using /usr/bin/mlock instead of /usr/sbin/mlock. (Closes: #451490)
+  * Add patch to configure.ac that fixes arm-linux-gnueabi (Closes: #459830)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Sat, 05 Jan 2008 11:22:01 -0800
+
+alpine (1.0+dfsg-1) unstable; urgency=low
+
+  * New upstream release. (Closes: #457327)
+  * Migrate to new real Homepage field.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Fri, 04 Jan 2008 17:01:16 -0800
+
+alpine (0.999999+dfsg-2) unstable; urgency=low
+
+  * Add a build-depends on libkrb5-dev, but does not close bug #455359
+    due to upstream autoconf problems
+  * Added a configure argument to set the MTA path (Closes: #427097)
+  * Properly added XS-DM-Upload-Allowed as per #453400
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Sat, 15 Dec 2007 01:20:21 -0800
+
+alpine (0.999999+dfsg-1) unstable; urgency=low
+
+  * New upstream release.
+  * Stop patching Makefiles and just pass an argument to configure (oops)
+  * Add DM-Upload-Allowed: yes to source section of control
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Fri, 07 Dec 2007 10:39:13 -0800
+
+alpine (0.99999+dfsg-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Sat, 10 Nov 2007 15:51:34 +0900
+
+alpine (0.9999+dfsg-1) unstable; urgency=low
+
+  * New upstream release
+  * alpine-dbg only requires alpine | alpine-pico | pilot now.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Fri, 07 Sep 2007 11:31:11 -0700
+
+alpine (0.999+dfsg-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Fri, 29 Jun 2007 01:59:10 -0400
+
+alpine (0.99+dfsg-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Thu, 03 May 2007 14:56:05 -0400
+
+alpine (0.98+dfsg-1) unstable; urgency=low
+
+  * Added a note to README.Debian about sending mail, and Suggests:
+    mail-transport-agent. (Closes: #414266)
+  * New upstream release.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Thu, 15 Mar 2007 14:57:22 -0400
+
+alpine (0.83+dfsg-3) unstable; urgency=low
+
+  * Adding -dbg package with debug symbols.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Wed, 14 Mar 2007 06:43:45 -0400
+
+alpine (0.83+dfsg-2) unstable; urgency=low
+
+  * Bumped compat/ to 5 for future use of dh_strip.
+  * Uses --with-debug-level=0 instead of entirely removing the 
+    feature.
+  * Fixes pinerc handling for address book sorting. (Closes: #410300)
+  * Supports GNU/kFreeBSD in configure.ac. (Closes: #414228)
+  * Renames passfile to ~/.pine-passfile in keeping with e.g. .pinerc.
+  * Documented that in README.Debian.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Wed, 07 Mar 2007 11:11:50 -0500
+
+alpine (0.83+dfsg-1) unstable; urgency=low
+
+  * New upstream release
+  * Now sed handles updating source for path changes
+  * Supports passfile of ~/.alpine-passfile (Closes: #410976)
+  * Upstream fixed man page to remove -create_lu (Closes: #410302)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Fri,  2 Mar 2007 17:53:35 -0500
+
+alpine (0.82+dfsg-5) unstable; urgency=low
+
+  * Actually make pilot "priority: optional".
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Sat, 17 Feb 2007 13:17:42 -0500
+
+alpine (0.82+dfsg-4) unstable; urgency=low
+
+  * Give pico the "mail - optional" and pilot the "utils - optional" suite.
+  * Disable debug in alpine configure. (Closes: #405689)
+  * Enabled aspell as spellchecker
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Fri, 16 Feb 2007 15:07:14 -0500
+
+alpine (0.82+dfsg-3) unstable; urgency=low
+
+  * Make pilot not conflict: pilot.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Sat,  3 Feb 2007 02:09:25 -0500
+
+alpine (0.82+dfsg-2) unstable; urgency=low
+
+  * Renamed alpine-pilot to pilot as was actually wanted.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Fri,  2 Feb 2007 16:00:10 -0500
+
+alpine (0.82+dfsg-1) unstable; urgency=low
+
+  * Configuration files are now in /etc, and the documentation is updated.
+    (Closes: #405700)
+  * debian/rules now cleans correctly. (Closes: #407477)
+  * alpinef symlink in place. (Closes: #405690)
+  * alpine-pilot package now created for pilot. (Closes: #405693)
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Fri,  2 Feb 2007 16:00:08 -0500
+
+alpine (0.81+dfsg-1) unstable; urgency=low
+
+  * New upstream release.
+  * Repacked original tarball because it included non-DFSG-free RFC files.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Wed, 20 Dec 2006 09:08:59 -0500
+
+alpine (0.8-1) unstable; urgency=low
+
+  * Initial release. (Closes: #401001)
+  * Changed imap/Makefile to enable IPv6 mode and skip the interactive prompt.
+
+ -- Asheesh Laroia <asheesh@asheesh.org>  Wed, 29 Nov 2006 22:56:28 -0500
