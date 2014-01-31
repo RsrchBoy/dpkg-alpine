@@ -1,7 +1,7 @@
-Index: alpine-2.02/imap/src/osdep/unix/flocklnx.c
+Index: alpine/imap/src/osdep/unix/flocklnx.c
 ===================================================================
---- alpine-2.02.orig/imap/src/osdep/unix/flocklnx.c	2010-10-02 04:37:57.000000000 -0400
-+++ alpine-2.02/imap/src/osdep/unix/flocklnx.c	2011-11-11 08:58:18.297338885 -0500
+--- alpine.orig/imap/src/osdep/unix/flocklnx.c	2014-01-30 17:01:26.028211191 -0800
++++ alpine/imap/src/osdep/unix/flocklnx.c	2014-01-30 17:01:26.008211191 -0800
 @@ -57,7 +57,7 @@
      case ENOLCK:		/* lock table is full */
        sprintf (tmp,"File locking failure: %s",strerror (errno));
@@ -11,11 +11,11 @@ Index: alpine-2.02/imap/src/osdep/unix/flocklnx.c
  				/* return failure if non-blocking lock */
        if (op & LOCK_NB) return -1;
        sleep (5);		/* slow down in case it loops */
-Index: alpine-2.02/alpine/mailcmd.c
+Index: alpine/alpine/mailcmd.c
 ===================================================================
---- alpine-2.02.orig/alpine/mailcmd.c	2010-10-02 04:37:57.000000000 -0400
-+++ alpine-2.02/alpine/mailcmd.c	2011-11-11 09:02:29.357346728 -0500
-@@ -7879,7 +7879,7 @@
+--- alpine.orig/alpine/mailcmd.c	2014-01-30 17:01:26.028211191 -0800
++++ alpine/alpine/mailcmd.c	2014-01-30 17:01:26.012211191 -0800
+@@ -7919,7 +7919,7 @@
  
  	      case 13 :			/* Match my addresses */
  		me++;
@@ -24,11 +24,11 @@ Index: alpine-2.02/alpine/mailcmd.c
  		continue;
  
  	      case 14 :			/* Subject: default */
-Index: alpine-2.02/pith/ldap.c
+Index: alpine/pith/ldap.c
 ===================================================================
---- alpine-2.02.orig/pith/ldap.c	2010-10-02 04:37:57.000000000 -0400
-+++ alpine-2.02/pith/ldap.c	2011-11-11 09:02:03.401345919 -0500
-@@ -777,7 +777,7 @@
+--- alpine.orig/pith/ldap.c	2014-01-30 17:01:26.028211191 -0800
++++ alpine/pith/ldap.c	2014-01-30 17:01:26.012211191 -0800
+@@ -778,7 +778,7 @@
  	 */
  	switch(args){
  	  case 0:

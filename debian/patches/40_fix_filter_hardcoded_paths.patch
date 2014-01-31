@@ -1,6 +1,8 @@
---- a/pith/filter.c
-+++ b/pith/filter.c
-@@ -3134,7 +3134,7 @@
+Index: alpine/pith/filter.c
+===================================================================
+--- alpine.orig/pith/filter.c	2014-01-30 17:00:49.768211005 -0800
++++ alpine/pith/filter.c	2014-01-30 17:00:49.756211005 -0800
+@@ -3135,7 +3135,7 @@
  #endif
  
  #ifndef SYSTEM_PINE_INFO_PATH
