@@ -4,3 +4,4 @@
 40_fix_filter_hardcoded_paths.patch
 40_fix_browser_hardcoded_paths.patch
 80_remove_phone_home.patch
+90_maildir.patch
