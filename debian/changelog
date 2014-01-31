@@ -1,3 +1,11 @@
+alpine (2.10+dfsg-1.1) UNRELEASED; urgency=low
+
+  * Non-maintainer upload.
+  * ...the better to build in our ppa.
+  * ...and add the maildir patch.
+
+ -- Chris Weyl <cweyl@alumni.drew.edu>  Thu, 30 Jan 2014 17:12:10 -0800
+
 alpine (2.10+dfsg-1) unstable; urgency=low
 
   * New upstream release.
