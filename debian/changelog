@@ -1,3 +1,9 @@
+alpine (2.10+dfsg-1.1~12.04~ppa1) precise; urgency=low
+
+  * Build for precise.
+
+ -- Chris Weyl <cweyl@alumni.drew.edu>  Sun, 02 Feb 2014 21:46:52 -0800
+
 alpine (2.10+dfsg-1.1) UNRELEASED; urgency=low
 
   * Non-maintainer upload.
