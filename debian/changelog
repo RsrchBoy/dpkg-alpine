@@ -3,7 +3,9 @@ alpine (2.11+dfsg1-3) unstable; urgency=medium
   [ Unit 193 ]
   * d/patches/10_hurd_build.patch: Fix FTBFS on Hurd, thanks Svante. (Closes: #753698)
 
-  [ Asheesh ]
+  [ Asheesh Laroia ]
+  * d/patches/10_hurd_build.patch: Remove unnecessary space, and mark it as reviewed.
+  * Add a second HURD build patch.
   * Reviewed package.
 
  -- Unit 193 <unit193@ubuntu.com>  Sun, 07 Sep 2014 15:30:25 -0700
