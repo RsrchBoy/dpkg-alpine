@@ -1,0 +1,18 @@
+Description: Add HURD to other host check
+Author: Asheesh Laroia <asheesh@asheesh.org>
+Origin: vendor
+Bug-Debian: http://bugs.debian.org/753698
+Forwarded: no
+Last-Update: 2014-09-07
+
+--- a/configure.ac
++++ b/configure.ac
+@@ -723,7 +723,7 @@ dnl is the one intended to be used.
+ else
+   dnl preload c-client default locations/options
+   case $host in
+-    *-linux-gnu*)
++    *-linux-gnu*|*-k*bsd*-gnu*|*-gnu*)
+       if test -f /etc/fedora-release -o -f /etc/redhat-release -o -f /etc/redhat_version ; then  
+         alpine_SSLTYPE="nopwd"
+ 	if test -d /etc/pki/tls ; then  

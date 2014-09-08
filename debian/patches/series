@@ -2,6 +2,7 @@
 10_alpine_1.10_mlock.patch
 10_alpine_1.10_spooldir.patch
 10_hurd_build.patch
+10_hurd_build_continued.patch
 30_fix_man_page_hardcoded_paths.patch
 40_fix_tech_notes_hardcoded_paths.patch
 40_fix_filter_hardcoded_paths.patch
