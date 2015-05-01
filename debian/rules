@@ -2,7 +2,7 @@
 # debian/rules for alpine
 
 # Used in get-orig-source, upstreams tarball.
-SHASUM=fecc9ca5df03e0f368edec65cd61444325157b5635b5c92380cedf9c4ce8fbf6
+SHASUM=ed639b6e5bb97e6b0645c85262ca6a784316195d461ce8d8411999bf80449227
 
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
