@@ -19,10 +19,10 @@ Signed-off-by: Geoffrey Thomas <geofft@ldpreload.com>
  pith/state.h      |    1 -
  9 files changed, 3 insertions(+), 178 deletions(-)
 
-diff --git a/alpine/mailview.c b/alpine/mailview.c
-index 35f5833..6b48860 100644
---- a/alpine/mailview.c
-+++ b/alpine/mailview.c
+Index: alpine-2.20+dfsg1/alpine/mailview.c
+===================================================================
+--- alpine-2.20+dfsg1.orig/alpine/mailview.c
++++ alpine-2.20+dfsg1/alpine/mailview.c
 @@ -178,7 +178,6 @@ int	    url_local_imap(char *);
  int	    url_local_nntp(char *);
  int	    url_local_news(char *);
@@ -31,7 +31,7 @@ index 35f5833..6b48860 100644
  static int  print_to_printer(SCROLL_S *);
  int	    search_text(int, long, int, char **, Pos *, int *);
  void	    update_scroll_titlebar(long, int);
-@@ -1701,7 +1700,6 @@ url_local_handler(char *s)
+@@ -1608,7 +1607,6 @@ url_local_handler(char *s)
  	{"x-alpine-gripe:", 15, gripe_gripe_to},
  	{"x-alpine-help:", 14, url_local_helper},
  	{"x-pine-help:", 12, url_local_helper},
@@ -39,7 +39,7 @@ index 35f5833..6b48860 100644
  	{"x-alpine-config:", 16, url_local_config},
  	{"x-alpine-cert:", 14, url_local_certdetails},
  	{"#", 1, url_local_fragment},
-@@ -2256,14 +2255,6 @@ url_local_fragment(char *fragment)
+@@ -2163,14 +2161,6 @@ url_local_fragment(char *fragment)
  }
  
  
@@ -54,10 +54,10 @@ index 35f5833..6b48860 100644
  /*
   * Format editorial comment referencing screen offering
   * List-* header supplied commands
-diff --git a/alpine/newuser.c b/alpine/newuser.c
-index 381f21c..09a7991 100644
---- a/alpine/newuser.c
-+++ b/alpine/newuser.c
+Index: alpine-2.20+dfsg1/alpine/newuser.c
+===================================================================
+--- alpine-2.20+dfsg1.orig/alpine/newuser.c
++++ alpine-2.20+dfsg1/alpine/newuser.c
 @@ -69,20 +69,6 @@ new_user_or_version(struct pine *ps)
      shown_text = text;
  
@@ -98,24 +98,25 @@ index 381f21c..09a7991 100644
  
  		if(ps->first_time_user)
  		  clrbitn(NUOV_RELNOTES, sargs.keys.bitmap);
-diff --git a/alpine/send.c b/alpine/send.c
-index 3d670f0..f9c193d 100644
---- a/alpine/send.c
-+++ b/alpine/send.c
+Index: alpine-2.20+dfsg1/alpine/send.c
+===================================================================
+--- alpine-2.20+dfsg1.orig/alpine/send.c
++++ alpine-2.20+dfsg1/alpine/send.c
 @@ -71,9 +71,6 @@ typedef struct body_particulars {
      PARAMETER         *parameter;
  } BODY_PARTICULARS_S;
  
 -#define	PHONE_HOME_VERSION	"-count"
--#define	PHONE_HOME_HOST		"docserver.cac.washington.edu"
+-#define	PHONE_HOME_HOST		"patches.freeiz.com"
 -
  /*
   * macro to bind pico's headerentry pointer to PINEFIELD "extdata" hook
   */
-@@ -5481,63 +5478,6 @@ pine_send_newsgroup_name(char *mailbox, char *group_name, size_t len)
+@@ -5480,63 +5477,6 @@ pine_send_newsgroup_name(char *mailbox,
+ }
  
  
- /*----------------------------------------------------------------------
+-/*----------------------------------------------------------------------
 -     Generate and send a message back to the pine development team
 -     
 -Args: none
@@ -125,9 +126,9 @@ index 3d670f0..f9c193d 100644
 -void
 -phone_home(char *addr)
 -{
--    char      tmp[MAX_ADDRESS];
--    ENVELOPE *outgoing;
--    BODY     *body;
+-    char       tmp[MAX_ADDRESS];
+-    ENVELOPE  *outgoing;
+-    BODY      *body;
 -
 -    outgoing = mail_newenvelope();
 -    if(!addr || !strindex(addr, '@')){
@@ -158,13 +159,13 @@ index 3d670f0..f9c193d 100644
 -	      && ps_global->VAR_NNTP_SERVER[0][0])
 -	  so_puts((STORE_S *)body->contents.text.data, " and NNTP");
 -
--	(void)pine_simple_send(outgoing, &body, NULL,NULL,NULL,NULL, SS_NULLRP);
+-	(void) pine_simple_send(outgoing, &body, NULL,NULL,NULL,NULL, SS_NULLRP);
 -
 -	q_status_message(SM_ORDER, 1, 3, "Thanks for being counted!");
 -    }
 -    else
 -      q_status_message(SM_ORDER | SM_DING, 3, 4,
--		       "Problem creating space for message text.");
+-	               "Problem creating space for message text.");
 -
 -    mail_free_envelope(&outgoing);
 -    pine_free_body(&body);
@@ -172,27 +173,26 @@ index 3d670f0..f9c193d 100644
 -}
 -
 -
--/*----------------------------------------------------------------------
+ /*----------------------------------------------------------------------
      Set up fields for passing to pico.  Assumes first text part is
      intended to be passed along for editing, and is in the form of
-     of a storage object brought into existence sometime before pico_send().
-diff --git a/alpine/send.h b/alpine/send.h
-index 4d216dd..68cbec6 100644
---- a/alpine/send.h
-+++ b/alpine/send.h
-@@ -42,7 +42,6 @@ int	    pine_simple_send(ENVELOPE *, BODY **, ACTION_S *, char *, char *, char *
+Index: alpine-2.20+dfsg1/alpine/send.h
+===================================================================
+--- alpine-2.20+dfsg1.orig/alpine/send.h
++++ alpine-2.20+dfsg1/alpine/send.h
+@@ -42,7 +42,6 @@ int	    pine_simple_send(ENVELOPE *, BOD
  void	    pine_send(ENVELOPE *, BODY **, char *, ACTION_S *, char *, REPLY_S *,
  		      REDRAFT_POS_S *, char *, PINEFIELD *, int);
  int	    upload_msg_to_pico(char *, size_t, long *);
--void	    phone_home(char *);
+-void        phone_home(char *);
  void        create_message_body(BODY **, PATMT *, int);
  char	   *pine_send_status(int, char *, char *, size_t, int *);
  int	    confirm_daemon_send(void);
-diff --git a/pith/filter.c b/pith/filter.c
-index b8712b2..2ecee11 100644
---- a/pith/filter.c
-+++ b/pith/filter.c
-@@ -7521,8 +7521,6 @@ html_element_comment(FILTER_S *f, char *s)
+Index: alpine-2.20+dfsg1/pith/filter.c
+===================================================================
+--- alpine-2.20+dfsg1.orig/pith/filter.c
++++ alpine-2.20+dfsg1/pith/filter.c
+@@ -7542,8 +7542,6 @@ html_element_comment(FILTER_S *f, char *
  		      HD(f)->bitbucket = 0;
  		    else if(!strucmp(s, "running"))
  		      HD(f)->bitbucket = 0;
@@ -201,42 +201,44 @@ index b8712b2..2ecee11 100644
  #ifdef	_WINDOWS
  		    else if(!strucmp(s, "os_windows"))
  		      HD(f)->bitbucket = 0;
-diff --git a/pith/pine.hlp b/pith/pine.hlp
-index 3af1062..19d86d4 100644
---- a/pith/pine.hlp
-+++ b/pith/pine.hlp
-@@ -1322,18 +1322,6 @@ this link now to send a message to it:<BR>
+Index: alpine-2.20+dfsg1/pith/pine.hlp
+===================================================================
+--- alpine-2.20+dfsg1.orig/pith/pine.hlp
++++ alpine-2.20+dfsg1/pith/pine.hlp
+@@ -1650,19 +1650,6 @@ this link now to send a message to it:<B
  We hope you will explore Alpine's many capabilities. From the MAIN MENU,
  select Setup/Config to see many of the options available to you. Also note
  that all screens have context-sensitive help text available.<P>
 -<!--chtml if pinemode="phone_home"-->
 -SPECIAL REQUEST:
--This software is made available as a public service of the
--University of Washington in Seattle. We are no longer actively developing
--the software, but it is still helpful to us to have an idea of how many
--people are using Alpine. Are you willing to be counted as an Alpine user? Pressing 
+-This software was originally created and maintained as a public
+-service by the University of Washington until 2009; updates are made 
+-available as a public service of the Alpine community. It is always 
+-helpful to have an idea of how many users are using Alpine. Are you 
+-willing to be counted as an Alpine user? Pressing 
 -<A HREF="X-Alpine-Phone-Home:">Return</A>
 -will send an anonymous (meaning, your real email address will not be revealed) 
--message to the Alpine team at the University of Washington for purposes of tallying.
+-message to the Alpine developers for purposes of tallying.
 -<P>
 -<!--To Exit this screen and continue your Alpine session press "E".-->
 -<!--chtml else-->
  To Exit this screen and continue your Alpine session press "Return".
  <!--chtml endif-->
  </BODY>
-@@ -1355,20 +1343,7 @@ Your Pine configuration file is automatically used for Alpine.
+@@ -1684,21 +1671,7 @@ Your Pine configuration file is automati
  The Release Notes may be viewed by pressing 
  &quot;R&quot; now or while in the MAIN MENU.
  <P>
 -<!--chtml if pinemode="phone_home"-->
 -SPECIAL REQUEST:
--This software is made available as a public service of the
--University of Washington in Seattle. We are no longer actively developing
--the software, but it is still helpful to us to have an idea of how many
--people are using Alpine. Are you willing to be counted as an Alpine user? Pressing 
+-This software was originally created and maintained as a public
+-service by the University of Washington until 2009; updates are made 
+-available as a public service of the Alpine community. It is always 
+-helpful to have an idea of how many users are using Alpine. Are you 
+-willing to be counted as an Alpine user? Pressing 
 -<A HREF="X-Alpine-Phone-Home:">Return</A>
 -will send an anonymous (meaning, your real email address will not be revealed) 
--message to the Alpine team at the University of Washington for purposes of tallying.
+-message to the Alpine developers for purposes of tallying.
 -<P>
 -<!--To Exit this screen and continue your Alpine session press "E".-->
 -<!--chtml else-->
@@ -245,20 +247,21 @@ index 3af1062..19d86d4 100644
  </BODY>
  </HTML>
  ===== new_version_greeting ======
-@@ -1385,20 +1360,7 @@ this version of Alpine before.  This version's significant changes are
+@@ -1715,21 +1688,7 @@ this version of Alpine before.  This ver
  documented in the Release Notes, which may be viewed by pressing 
  &quot;R&quot; now or while in the MAIN MENU.
  <P>
 -<!--chtml if pinemode="phone_home"-->
 -SPECIAL REQUEST:
--This software is made available as a public service of the
--University of Washington in Seattle. We are no longer actively developing
--the software, but it is still helpful to us to have an idea of how many
--people are using Alpine. Are you willing to be counted as an Alpine user? Pressing 
+-This software was originally created and maintained as a public
+-service by the University of Washington until 2009; updates are made 
+-available as a public service of the Alpine community. It is always 
+-helpful to have an idea of how many users are using Alpine. Are you 
+-willing to be counted as an Alpine user? Pressing 
 -<A HREF="X-Alpine-Phone-Home:">Return</A>
 -will send an anonymous (meaning, your real email address will not be revealed) 
--message to the Alpine team at the University of Washington for purposes of tallying.
--
+-message to the Alpine developers for purposes of tallying.
+-<P>
 -<!--To Exit this screen and continue your Alpine session press "E".-->
 -<!--chtml else-->
  To Exit this screen and continue your Alpine session press "Return".
@@ -266,11 +269,34 @@ index 3af1062..19d86d4 100644
  </BODY>
  </HTML>
  
-diff --git a/pith/send.c b/pith/send.c
-index a0c6043..ddf73bf 100644
---- a/pith/send.c
-+++ b/pith/send.c
-@@ -1677,48 +1677,6 @@ update_answered_flags(REPLY_S *reply)
+Index: alpine-2.20+dfsg1/pith/send.h
+===================================================================
+--- alpine-2.20+dfsg1.orig/pith/send.h
++++ alpine-2.20+dfsg1/pith/send.h
+@@ -225,8 +225,6 @@ METAENV	   *pine_new_env(ENVELOPE *, cha
+ void	    pine_free_env(METAENV **);
+ int	    check_addresses(METAENV *);
+ void	    update_answered_flags(REPLY_S *);
+-ADDRESS	   *phone_home_from(void);
+-unsigned int phone_home_hash(char *);
+ int         call_mailer(METAENV *, BODY *, char **, int, void (*)(char *, int),
+ 			void (*)(PIPE_S *, int, void *));
+ int         write_postponed(METAENV *, BODY *);
+Index: alpine-2.20+dfsg1/pith/state.h
+===================================================================
+--- alpine-2.20+dfsg1.orig/pith/state.h
++++ alpine-2.20+dfsg1/pith/state.h
+@@ -193,7 +193,6 @@ struct pine {
+     unsigned	 force_prefer_plain:1;
+     unsigned	 force_no_prefer_plain:1;
+ 
+-    unsigned	 phone_home:1;
+     unsigned     painted_body_on_startup:1;
+     unsigned     painted_footer_on_startup:1;
+     unsigned     open_readonly_on_startup:1;
+--- alpine-2.20+dfsg1.orig/pith/send.c	2015-01-23 17:23:14.000000000 -0500
++++ alpine-2.20+dfsg1pith/send.c	2015-01-23 17:30:15.959071387 -0500
+@@ -1681,48 +1681,6 @@
  }
  
  
@@ -282,7 +308,7 @@ index a0c6043..ddf73bf 100644
 -phone_home_from(void)
 -{
 -    ADDRESS *addr = mail_newaddr();
--    char     tmp[32];
+-    char     tmp[32];	
 -
 -    /* garble up mailbox name */
 -    snprintf(tmp, sizeof(tmp), "hash_%08u", phone_home_hash(ps_global->VAR_USER_ID));
@@ -311,7 +337,7 @@ index a0c6043..ddf73bf 100644
 -
 -        h = ((h+1) * ((unsigned char) *s)) & (PH_MAXHASH - 1);
 -    }
--    
+-
 -    return (h);
 -}
 -
@@ -319,31 +345,3 @@ index a0c6043..ddf73bf 100644
  /*----------------------------------------------------------------------
       Call the mailer, SMTP, sendmail or whatever
       
-diff --git a/pith/send.h b/pith/send.h
-index 69d763f..f4787bd 100644
---- a/pith/send.h
-+++ b/pith/send.h
-@@ -225,8 +225,6 @@ METAENV	   *pine_new_env(ENVELOPE *, char **, char ***, PINEFIELD *);
- void	    pine_free_env(METAENV **);
- int	    check_addresses(METAENV *);
- void	    update_answered_flags(REPLY_S *);
--ADDRESS	   *phone_home_from(void);
--unsigned int phone_home_hash(char *);
- int         call_mailer(METAENV *, BODY *, char **, int, void (*)(char *, int),
- 			void (*)(PIPE_S *, int, void *));
- int         write_postponed(METAENV *, BODY *);
-diff --git a/pith/state.h b/pith/state.h
-index 93db4f4..efcab46 100644
---- a/pith/state.h
-+++ b/pith/state.h
-@@ -190,7 +190,6 @@ struct pine {
-     unsigned	 force_prefer_plain:1;
-     unsigned	 force_no_prefer_plain:1;
- 
--    unsigned	 phone_home:1;
-     unsigned     painted_body_on_startup:1;
-     unsigned     painted_footer_on_startup:1;
-     unsigned     open_readonly_on_startup:1;
--- 
-1.7.10.4
-

@@ -1,6 +1,6 @@
 --- a/pith/filter.c
 +++ b/pith/filter.c
-@@ -3134,7 +3134,7 @@
+@@ -3138,7 +3138,7 @@
  #endif
  
  #ifndef SYSTEM_PINE_INFO_PATH

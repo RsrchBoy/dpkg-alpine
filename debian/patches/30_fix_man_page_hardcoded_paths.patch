@@ -1,6 +1,6 @@
 --- a/doc/alpine.1
 +++ b/doc/alpine.1
-@@ -305,11 +305,11 @@
+@@ -307,11 +307,11 @@
  .br
  /etc/mime.types	System-wide file ext. to MIME type mapping
  .br
