@@ -1,6 +1,8 @@
---- a/imap/docs/imaprc.txt
-+++ b/imap/docs/imaprc.txt
-@@ -168,8 +168,8 @@
+Index: alpine/imap/docs/imaprc.txt
+===================================================================
+--- alpine.orig/imap/docs/imaprc.txt
++++ alpine/imap/docs/imaprc.txt
+@@ -168,8 +168,8 @@ matter.  Unrecognized commands are ignor
     Sets the directory in which the user's data can be found.  A user's
     folders can be found in a subdirectory of the black box directory
     named with the user's username.  For example, if the blackbox
@@ -11,7 +13,7 @@
     the location of folders, .mminit, .imaprc, .newsrc, and all other
     files used by c-client; internally, it sets c-client's idea of the
     user's ``home directory'', overriding /etc/passwd.
-@@ -411,14 +411,14 @@
+@@ -411,14 +411,14 @@ matter.  Unrecognized commands are ignor
      If non-zero, a warning message is given if an attempt to create a
      lock file fails.  Otherwise, EACCES is treated as a "silent failure",
      and it proceeds without trying to use the lock file.  This is for
@@ -29,9 +31,11 @@
      is no fcntl() locking (SVR4) or usable flock() locking (e.g. NFS),
      then there is no way to win.  Find a different system to use.
  
---- a/imap/docs/locking.txt
-+++ b/imap/docs/locking.txt
-@@ -255,7 +255,7 @@
+Index: alpine/imap/docs/locking.txt
+===================================================================
+--- alpine.orig/imap/docs/locking.txt
++++ alpine/imap/docs/locking.txt
+@@ -255,7 +255,7 @@ of time while c-client is actually doing
  timeout for this lock, after which it is broken on the presumption
  that it is a stale lock.  If it can not create the .lock file due to
  an EACCES (protection failure) error, it once silently proceeded
@@ -40,7 +44,7 @@
  from unprivileged processes creating files.  Today, c-client reports
  an error unless it is built otherwise.  The purpose of this lock is to
  prevent against unfavorable interactions with mail delivery.
-@@ -278,7 +278,7 @@
+@@ -278,7 +278,7 @@ file).
  
       Mail delivery daemons use lock (1), (2), or both.  Lock (1) works
  over NFS; lock (2) is the only one that works on sites that protect
@@ -49,7 +53,7 @@
  delivery daemons use both forms of locking, and of course so does
  c-client.
  
-@@ -335,7 +335,7 @@
+@@ -335,7 +335,7 @@ not true if the mailer does not check fo
  the mail file is NFS-mounted.
  
       What this means is that there is *no* locking protection at all
@@ -58,3 +62,108 @@
  not permit file creation by unprivileged programs.  It is impossible,
  under these circumstances, for an unprivileged program to do anything
  about it.  Worse, if EACCES errors on .lock file creation are no-op'ed
+Index: alpine/alpine/pine-use.c
+===================================================================
+--- alpine.orig/alpine/pine-use.c
++++ alpine/alpine/pine-use.c
+@@ -23,7 +23,7 @@ static char rcsid[] = "$Id: pine-use.c 7
+ #include <sys/stat.h>
+ 
+ #ifndef MAILSPOOLPCTS
+-#define MAILSPOOLPCTS "/usr/spool/mail/%s"
++#define MAILSPOOLPCTS "/var/spool/mail/%s"
+ /* #define MAILSPOOLPCTS "/usr/mail/%s" */
+ #endif
+ 
+Index: alpine/doc/alpine.1
+===================================================================
+--- alpine.orig/doc/alpine.1
++++ alpine/doc/alpine.1
+@@ -285,7 +285,7 @@ uses the following environment variables
+ .if n .ta 2.8i
+ .if t .ta 2.1i
+ 
+-/usr/spool/mail/xxxx	Default folder for incoming mail.
++/var/spool/mail/xxxx	Default folder for incoming mail.
+ .br
+ ~/mail	Default directory for mail folders.
+ .br
+Index: alpine/doc/tech-notes/config.html
+===================================================================
+--- alpine.orig/doc/tech-notes/config.html
++++ alpine/doc/tech-notes/config.html
+@@ -2326,7 +2326,7 @@ for more information.  <P>
+ 
+ <DD> This option tells <EM>Alpine</EM> where to look for the "news spool" for
+ newsgroups when accessing news locally, rather than via NNTP.  The default
+-path is usually <CODE>/usr/spool/news</CODE>. <P>
++path is usually <CODE>/var/spool/news</CODE>. <P>
+ 
+ <DT> <A NAME="newsrc-path"><EM>newsrc-path</EM></A>
+ 
+Index: alpine/doc/tech-notes/tech-notes.txt
+===================================================================
+--- alpine.orig/doc/tech-notes/tech-notes.txt
++++ alpine/doc/tech-notes/tech-notes.txt
+@@ -2801,7 +2801,7 @@ General Configuration Variables
+    _news-spool-directory_
+           This option tells _Alpine_ where to look for the "news spool"
+           for newsgroups when accessing news locally, rather than via
+-          NNTP. The default path is usually /usr/spool/news.
++          NNTP. The default path is usually /var/spool/news.
+    _newsrc-path_
+           This option overrides the default name _Alpine_ uses for your
+           "newsrc" news status and subscription file. If set, _Alpine_
+Index: alpine/imap/src/osdep/unix/Makefile
+===================================================================
+--- alpine.orig/imap/src/osdep/unix/Makefile
++++ alpine/imap/src/osdep/unix/Makefile
+@@ -99,7 +99,7 @@ LOGINPW=std
+ SIGTYPE=bsd
+ CRXTYPE=std
+ ACTIVEFILE=/usr/lib/news/active
+-SPOOLDIR=/usr/spool
++SPOOLDIR=/var/spool
+ MAILSPOOL=$(SPOOLDIR)/mail
+ NEWSSPOOL=$(SPOOLDIR)/news
+ RSHPATH=/usr/ucb/rsh
+@@ -235,7 +235,7 @@ art:	# AIX 2.2.1 for RT
+ asv:	# Altos SVR4
+ 	$(BUILD) `$(CAT) SPECIALS` OS=$@ \
+ 	 SIGTYPE=sv4 LOGINPW=old \
+-	 ACTIVEFILE=/usr/spool/news/active \
++	 ACTIVEFILE=/var/spool/news/active \
+ 	 RSHPATH=/usr/bin/rcmd \
+ 	 BASECFLAGS="-Dconst= -DSIGSTOP=SIGKILL" \
+ 	 BASELDFLAGS="-lsocket -lrpc -lgen -lcrypt -lxenix" \
+@@ -372,7 +372,7 @@ ga4:	# GCC AIX 4.1 for RS/6000
+ gas:	# GCC Altos SVR4
+ 	$(BUILD) `$(CAT) SPECIALS` OS=asv \
+ 	 SIGTYPE=sv4 LOGINPW=old \
+-	 ACTIVEFILE=/usr/spool/news/active \
++	 ACTIVEFILE=/var/spool/news/active \
+ 	 RSHPATH=/usr/bin/rcmd \
+ 	 BASECFLAGS="-g -O -DALTOS_SYSTEM_V -DSIGSTOP=SIGKILL" \
+ 	 BASELDFLAGS="-lsocket -lrpc -lgen -lcrypt -lxenix" \
+Index: alpine/pith/conf.c
+===================================================================
+--- alpine.orig/pith/conf.c
++++ alpine/pith/conf.c
+@@ -140,7 +140,7 @@ CONF_TXT_T cf_text_wp_state[] =			"Web A
+ 
+ CONF_TXT_T cf_text_wp_columns[] =		"Web Alpine preferred width for message display in characters";
+ 
+-CONF_TXT_T cf_text_inbox_path[] =		"Path of (local or remote) INBOX, e.g. ={mail.somewhere.edu}inbox\n# Normal Unix default is the local INBOX (usually /usr/spool/mail/$USER).";
++CONF_TXT_T cf_text_inbox_path[] =		"Path of (local or remote) INBOX, e.g. ={mail.somewhere.edu}inbox\n# Normal Unix default is the local INBOX (usually /var/spool/mail/$USER).";
+ 
+ CONF_TXT_T cf_text_incoming_folders[] =	"List of incoming msg folders besides INBOX, e.g. ={host2}inbox, {host3}inbox\n# Syntax: optnl-label {optnl-imap-host-name}folder-path";
+ 
+@@ -352,7 +352,7 @@ CONF_TXT_T cf_text_nntprange[] =	"For ne
+ 
+ CONF_TXT_T cf_text_news_active[] =	"Path and filename of news configuration's active file.\n# The default is typically \"/usr/lib/news/active\".";
+ 
+-CONF_TXT_T cf_text_news_spooldir[] =	"Directory containing system's news data.\n# The default is typically \"/usr/spool/news\"";
++CONF_TXT_T cf_text_news_spooldir[] =	"Directory containing system's news data.\n# The default is typically \"/var/spool/news\"";
+ 
+ CONF_TXT_T cf_text_upload_cmd[] =	"Path and filename of the program used to upload text from your terminal\n# emulator's into Alpine's composer.";
+ 
