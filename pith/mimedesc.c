@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: mimedesc.c 1142 2008-08-13 17:22:21Z hubert@u.washin
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -277,7 +277,7 @@ describe_mime(struct mail_bodystruct *body, char *prefix, int num,
         snprintf(a->number, ll, "%s%d",prefix, num);
 	a->number[ll-1] = '\0';
         (a+1)->description = NULL;
-        if(body->type == TYPEMESSAGE && body->encoding <= ENCBINARY
+        if(body->type == TYPEMESSAGE && body->encoding <= ENCBASE64
 	   && body->subtype && strucmp(body->subtype, "rfc822") == 0){
 	    body = body->nested.msg->body;
 	    snprintf(numx, sizeof(numx), "%.*s%d.", sizeof(numx)-20, prefix, num);
@@ -579,12 +579,15 @@ type_desc(int type, char *subtype, PARAMETER *params, PARAMETER *disp_params, in
     }
 
     if(full && type != TYPEMULTIPART && type != TYPEMESSAGE){
+	unsigned char decodebuf[10000];
 	if((parmval = parameter_val(params, "name")) != NULL){
-	    snprintf(p, sizeof(type_d)-(p-type_d), " (Name: \"%s\")", parmval);
+	    rfc1522_decode_to_utf8(decodebuf, sizeof(decodebuf), parmval);
+	    snprintf(p, sizeof(type_d)-(p-type_d), " (Name: \"%s\")", decodebuf);
 	    fs_give((void **) &parmval);
 	}
 	else if((parmval = parameter_val(disp_params, "filename")) != NULL){
-	    snprintf(p, sizeof(type_d)-(p-type_d), " (Filename: \"%s\")", parmval);
+	    rfc1522_decode_to_utf8(decodebuf, sizeof(decodebuf), parmval);
+	    snprintf(p, sizeof(type_d)-(p-type_d), " (Filename: \"%s\")", decodebuf);
 	    fs_give((void **) &parmval);
 	}
     }

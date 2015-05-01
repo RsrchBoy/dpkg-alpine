@@ -4,7 +4,7 @@ static char rcsid[] = "$Id: word.c 769 2007-10-24 00:15:40Z hubert@u.washington.
 
 /*
  * ========================================================================
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  * Copyright 2006-2007 University of Washington
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -434,7 +434,7 @@ is_user_separator(UCS c)
 void
 do_quote_match(UCS *q, LINE *l, UCS *buf, size_t buflen)
 {
-    register int i, j, qb;
+    register int i, j;
     int qstart, qend, k;
 
     /* 
@@ -815,11 +815,10 @@ fillpara(int f, int n)
 	swap_mark_and_dot_if_mark_comes_first();
 
 	/* determine if we're justifying quoted text or not */
-	qstr = (glo_quote_str
-		&& quote_match(glo_quote_str, 
-			       curwp->w_doto > 0 ? curwp->w_dotp->l_fp : curwp->w_dotp,
-			       qstr2, NSTRING)
-		&& *qstr2) ? qstr2 : NULL;
+	qstr = quote_match(glo_quote_str, 
+			curwp->w_doto > 0 ? curwp->w_dotp->l_fp : curwp->w_dotp,
+			qstr2, NSTRING)
+		&& *qstr2 ? qstr2 : NULL;
 
 
 	/*
@@ -843,10 +842,9 @@ fillpara(int f, int n)
 	  return(FALSE);
 
 	/* determine if we're justifying quoted text or not */
-	qstr = (glo_quote_str
-		&& quote_match(glo_quote_str, 
+	qstr = quote_match(glo_quote_str, 
 			       curwp->w_dotp, qstr2, NSTRING)
-		&& *qstr2) ? qstr2 : NULL;
+		&& *qstr2 ? qstr2 : NULL;
 
 	setmark(0,0);			/* mark last line of para */
 

@@ -3,7 +3,7 @@
  *
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -224,5 +224,14 @@ extern char *(*pith_opt_user_agent_prefix)(void);
  */
 extern int (*pith_opt_smime_get_passphrase)(void);
 
+/*
+ * Required call to interface for input of file to import.
+ */
+extern int (*pith_smime_import_certificate)(char *, char *, size_t);
+
+/*
+ * Required call to ask user to enter a password, with a given char * prompt
+ */
+extern int (*pith_smime_enter_password)(char *, char *, size_t);
 
 #endif /* PITH_OPTIONS_INCLUDED */

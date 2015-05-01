@@ -3,7 +3,7 @@
  *
  * ========================================================================
  * Copyright 2006-2007 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ int	    pine_simple_send(ENVELOPE *, BODY **, ACTION_S *, char *, char *, char *
 void	    pine_send(ENVELOPE *, BODY **, char *, ACTION_S *, char *, REPLY_S *,
 		      REDRAFT_POS_S *, char *, PINEFIELD *, int);
 int	    upload_msg_to_pico(char *, size_t, long *);
-void	    phone_home(char *);
+void        phone_home(char *);
 void        create_message_body(BODY **, PATMT *, int);
 char	   *pine_send_status(int, char *, char *, size_t, int *);
 int	    confirm_daemon_send(void);

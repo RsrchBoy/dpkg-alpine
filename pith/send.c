@@ -4,7 +4,7 @@ static char rcsid[] = "$Id: send.c 1204 2009-02-02 19:54:23Z hubert@u.washington
 
 /*
  * ========================================================================
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  * Copyright 2006-2008 University of Washington
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -429,7 +429,7 @@ redraft_work(MAILSTREAM **streamp, long int cont_msg, ENVELOPE **outgoing,
 	fields[++i]   = "X-Our-ReplyTo";	/* ReplyTo is real */
 	fields[++i]   = "Lcc";		/* Lcc: too... */
 	if(++i != FIELD_COUNT)
-	  panic("Fix FIELD_COUNT");
+	  alpine_panic("Fix FIELD_COUNT");
 
 	for(pf = *custom; pf && pf->name; pf = pf->next)
 	  if(!pf->standard)
@@ -890,7 +890,10 @@ redraft_work(MAILSTREAM **streamp, long int cont_msg, ENVELOPE **outgoing,
 	else{
 	    *body	  = mail_newbody();
 	    (*body)->type = TYPETEXT;
-	    if(b->subtype)
+	    if(b->subtype 	/* these types are transformed to text/plain */
+		&& strucmp(b->subtype, "richtext")
+		&& strucmp(b->subtype, "enriched")
+		&& strucmp(b->subtype, "html"))
 	      (*body)->subtype = cpystr(b->subtype);
 
 	    if((charset = parameter_val(b->parameter,"charset")) != NULL){
@@ -1563,6 +1566,7 @@ set_priority_header(METAENV *header, char *value)
 	      pf->textbuf = cpystr(value);
 	}
     }
+    return pf;
 }
 
 
@@ -1685,7 +1689,7 @@ ADDRESS *
 phone_home_from(void)
 {
     ADDRESS *addr = mail_newaddr();
-    char     tmp[32];
+    char     tmp[32];	
 
     /* garble up mailbox name */
     snprintf(tmp, sizeof(tmp), "hash_%08u", phone_home_hash(ps_global->VAR_USER_ID));
@@ -1714,7 +1718,7 @@ phone_home_hash(char *s)
 
         h = ((h+1) * ((unsigned char) *s)) & (PH_MAXHASH - 1);
     }
-    
+
     return (h);
 }
 
@@ -1761,21 +1765,23 @@ call_mailer(METAENV *header, struct mail_bodystruct *body, char **alt_smtp_serve
 #ifdef SMIME
     if(ps_global->smime && (ps_global->smime->do_encrypt || ps_global->smime->do_sign)){
     	int result;
-	
+
     	STORE_S *so = lmc.so;
 	lmc.so = NULL;
-    
+
     	result = 1;
-    
-    	if(ps_global->smime->do_encrypt)
-    	  result = encrypt_outgoing_message(header, &body);
-	
+
+    	if(ps_global->smime->do_sign){
+	  bp = F_ON(F_ENABLE_8BIT, ps_global) ? first_text_8bit(body) : NULL;
+	  result = sign_outgoing_message(header, &body, 0, &bp);
+	}
+
 	/* need to free new body from encrypt if sign fails? */
-	if(result && ps_global->smime->do_sign)
-	  result = sign_outgoing_message(header, &body, ps_global->smime->do_encrypt);
-	
+	if(result && ps_global->smime->do_encrypt)
+    	  result = encrypt_outgoing_message(header, &body);
+
 	lmc.so = so;
-	
+
 	if(!result)
 	  return 0;
     }
@@ -1998,6 +2004,19 @@ call_mailer(METAENV *header, struct mail_bodystruct *body, char **alt_smtp_serve
 		body_encodings[added_encoding] = body_encodings[ENC8BIT];
 		save_encoding = bp->encoding;
 		bp->encoding = added_encoding;
+#ifdef SMIME
+	    if(ps_global->smime && ps_global->smime->do_sign 
+		&& body->nested.part->next
+		&& body->nested.part->next->body.contents.text.data
+		&& body->nested.part->next->body.mime.text.data){
+		  STORE_S *so;
+
+		  so = (STORE_S *) body->nested.part->next->body.contents.text.data;
+		  so_give(&so);
+		  body->nested.part->next->body.contents.text.data = body->nested.part->next->body.mime.text.data;
+		  body->nested.part->next->body.mime.text.data = NULL;
+		}
+#endif /* SMIME */
 	    }
 	}
 
@@ -3089,7 +3108,7 @@ encode_header_value(char *d, size_t dlen, unsigned char *s, char *charset, int e
       return((char *)s);
     
     if(dlen < SIZEOF_20KBUF)
-      panic("bad call to encode_header_value");
+      alpine_panic("bad call to encode_header_value");
 
     if(!encode_all){
 	/*
@@ -4244,6 +4263,7 @@ l_putc(int c)
 long
 pine_rfc822_output_body(struct mail_bodystruct *body, soutr_t f, void *s)
 {
+    STORE_S *bodyso;
     PART *part;
     PARAMETER *param;
     char *t, *cookie = NIL, *encode_error;
@@ -4254,6 +4274,9 @@ pine_rfc822_output_body(struct mail_bodystruct *body, soutr_t f, void *s)
 
     dprint((4, "-- pine_rfc822_output_body: %d\n",
 	       body ? body->type : 0));
+
+    bodyso = (STORE_S *) body->contents.text.data;
+
     if(body->type == TYPEMULTIPART) {   /* multipart gets special handling */
 	part = body->nested.part;	/* first body part */
 					/* find cookie */
@@ -4264,8 +4287,12 @@ pine_rfc822_output_body(struct mail_bodystruct *body, soutr_t f, void *s)
 	/*
 	 * Output a bit of text before the first multipart delimiter
 	 * to warn unsuspecting users of non-mime-aware ua's that
-	 * they should expect weirdness...
+	 * they should expect weirdness. We do not add this when signing a
+	 * message, though...
 	 */
+#ifdef SMIME
+	if(ps_global->smime && !ps_global->smime->do_sign)
+#endif
 	if(f && !(*f)(s, "  This message is in MIME format.  The first part should be readable text,\015\012  while the remaining parts are likely unreadable without MIME-aware tools.\015\012\015\012"))
 	  return(0);
 
@@ -4283,6 +4310,11 @@ pine_rfc822_output_body(struct mail_bodystruct *body, soutr_t f, void *s)
 					/* output trailing cookie */
 	snprintf (t = tmp, sizeof(tmp), "--%s--",cookie);
 	tmp[sizeof(tmp)-1] = '\0';
+#ifdef SMIME
+	if(ps_global->smime && ps_global->smime->do_sign 
+		&& strlen(tmp) < sizeof(tmp)-2)
+	   strncat(tmp, "\r\n", 2);
+#endif
 	if(lmc.so && !lmc.all_written){
 	    so_puts(lmc.so, t);
 	    so_puts(lmc.so, "\015\012");
@@ -4297,8 +4329,8 @@ pine_rfc822_output_body(struct mail_bodystruct *body, soutr_t f, void *s)
     dprint((4, "-- pine_rfc822_output_body: segment %ld bytes\n",
 	       body->size.bytes));
 
-    if(body->contents.text.data)
-      gf_set_so_readc(&gc, (STORE_S *) body->contents.text.data);
+    if(bodyso)
+      gf_set_so_readc(&gc, bodyso);
     else
       return(1);
 
@@ -4306,15 +4338,15 @@ pine_rfc822_output_body(struct mail_bodystruct *body, soutr_t f, void *s)
      * Don't add trailing line if it is ExternalText, which already guarantees
      * a trailing newline.
      */
-    add_trailing_crlf = !(((STORE_S *) body->contents.text.data)->src == ExternalText);
+    add_trailing_crlf = !(bodyso->src == ExternalText);
 
-    so_seek((STORE_S *) body->contents.text.data, 0L, 0);
+    so_seek(bodyso, 0L, 0);
 
     if(body->type != TYPEMESSAGE){ 	/* NOT encapsulated message */
 	char *charset;
 
 	if(body->type == TYPETEXT
-	   && so_attr((STORE_S *) body->contents.text.data, "edited", NULL)
+	   && so_attr(bodyso, "edited", NULL)
 	   && (charset = parameter_val(body->parameter, "charset"))){
 	    if(strucmp(charset, "utf-8") && strucmp(charset, "us-ascii")){
 		if(!strucmp(charset, "iso-2022-jp")){
@@ -4346,7 +4378,7 @@ pine_rfc822_output_body(struct mail_bodystruct *body, soutr_t f, void *s)
 	 */
 	if(body->type == TYPETEXT
 	   && body->encoding != ENCBASE64
-	   && !so_attr((STORE_S *) body->contents.text.data, "rawbody", NULL)){
+	   && !so_attr(bodyso, "rawbody", NULL)){
 	    gf_link_filter(gf_local_nvtnl, NULL);
 	}
 
@@ -4370,7 +4402,7 @@ pine_rfc822_output_body(struct mail_bodystruct *body, soutr_t f, void *s)
 	display_message('x');
     }
 
-    gf_clear_so_readc((STORE_S *) body->contents.text.data);
+    gf_clear_so_readc(bodyso);
 
     if(encode_error || !l_flush_net(TRUE))
       return(0);
@@ -4419,6 +4451,17 @@ pine_rfc822_output_body(struct mail_bodystruct *body, soutr_t f, void *s)
       return(1);
 }
 
+char *
+ToLower(char *s, char *t)
+{
+ int i;
+
+ for(i = 0; s != NULL && s[i] != '\0'; i++)
+   t[i] = s[i] + ((s[i] >= 'A' && s[i] <= 'Z') ? ('a' - 'A') : 0);
+ t[i] = '\0';
+
+ return t;
+}
 
 /*
  * pine_write_body_header - another c-client clone.  This time
@@ -4441,11 +4484,11 @@ pine_write_body_header(struct mail_bodystruct *body, soutr_t f, void *s)
 
     if((so = so_get(CharStar, NULL, WRITE_ACCESS)) != NULL){
 	if(!(so_puts(so, "Content-Type: ")
-	     && so_puts(so, body_types[body->type])
+	     && so_puts(so, ToLower(body_types[body->type], tmp))
 	     && so_puts(so, "/")
-	     && so_puts(so, body->subtype
-			      ? body->subtype
-			      : rfc822_default_subtype (body->type))))
+	     && so_puts(so, ToLower(body->subtype
+				? body->subtype
+			 	: rfc822_default_subtype (body->type),tmp))))
 	  return(pwbh_finish(0, so));
 	    
 	if(body->parameter){

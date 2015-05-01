@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: string.c 910 2008-01-14 22:28:38Z hubert@u.washingto
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,8 +65,7 @@ static char rcsid[] = "$Id: string.c 910 2008-01-14 22:28:38Z hubert@u.washingto
 
 void        char_to_octal_triple(int, char *);
 char       *dollar_escape_dollars(char *);
-time_t      date_to_local_time_t(char *date);
-
+void	    convert_string_to_utf8(char *, int);
 
 
 /*----------------------------------------------------------------------
@@ -186,6 +185,18 @@ removing_leading_white_space(char *string)
       }
 }
 
+/* replace_embedded_tabs_by_space
+   replace any tab by only one space, when we do not want to see them
+   in the from or subject field.
+ */
+void
+replace_tabs_by_space(char *orig)
+{
+  char *s;
+
+  for(s = orig; s != NULL && *s != '\0' ; s++)
+     if(*s == '\t') *s = ' ';
+}
 
 
 /*----------------------------------------------------------------------  
@@ -420,7 +431,7 @@ short_str(char *src, char *buf, size_t buflen, int wid, WhereDots where)
 	    }
 
 	    q = buf;
-	    if(first){
+	    if(first > 0){
 		q += utf8_to_width(q, src, buflen, first, &got_width);
 		if(got_width != first){
 		  if(second)
@@ -437,7 +448,7 @@ short_str(char *src, char *buf, size_t buflen, int wid, WhereDots where)
 		q += strlen(q);
 	    }
 	    
-	    if(second){
+	    if(second > 0){
 		char *p;
 
 		p = utf8_count_back_width(src, src+strlen(src), second, &got_width);
@@ -749,6 +760,20 @@ istrncpy(char *d, char *s, int n)
 }
 
 
+void
+convert_string_to_utf8(char *buf, int bufsize)
+{
+   char *s;
+   if(strucmp("UTF-8", ps_global->display_charmap) &&
+      (s = convert_to_utf8(buf, ps_global->display_charmap, 0)) != NULL){
+	strncpy(buf, s, bufsize);
+	buf[bufsize-1] = '\0';
+        fs_give((void **)&s);
+   }
+}
+
+
+
 char *xdays[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", NULL};
 
 char *
@@ -769,13 +794,14 @@ month_abbrev_locale(int month_num)
 	if(month_num < 1 || month_num > 12)
 	  return("xxx");
 	else{
-	    static char buf[20];
+	    static char buf[120];
 	    struct tm tm;
 
 	    memset(&tm, 0, sizeof(tm));
 	    tm.tm_year = 107;
 	    tm.tm_mon = month_num-1;
 	    our_strftime(buf, sizeof(buf), "%b", &tm);
+	    convert_string_to_utf8(buf, sizeof(buf));
 
 	    /*
 	     * If it is all digits, then use the English
@@ -841,13 +867,14 @@ month_name_locale(int month_num)
 	if(month_num < 1 || month_num > 12)
 	  return("");
 	else{
-	    static char buf[20];
+	    static char buf[120];
 	    struct tm tm;
 
 	    memset(&tm, 0, sizeof(tm));
 	    tm.tm_year = 107;
 	    tm.tm_mon = month_num-1;
 	    our_strftime(buf, sizeof(buf), "%B", &tm);
+	    convert_string_to_utf8(buf, sizeof(buf));
 	    return(buf);
 	}
     }
@@ -875,12 +902,13 @@ day_abbrev_locale(int day_of_week)
 	if(day_of_week < 0 || day_of_week > 6)
 	  return("???");
 	else{
-	    static char buf[20];
+	    static char buf[120];
 	    struct tm tm;
 
 	    memset(&tm, 0, sizeof(tm));
 	    tm.tm_wday = day_of_week;
 	    our_strftime(buf, sizeof(buf), "%a", &tm);
+	    convert_string_to_utf8(buf, sizeof(buf));
 	    return(buf);
 	}
     }
@@ -909,12 +937,13 @@ day_name_locale(int day_of_week)
 	if(day_of_week < 0 || day_of_week > 6)
 	  return("");
 	else{
-	    static char buf[20];
+	    static char buf[120];
 	    struct tm tm;
 
 	    memset(&tm, 0, sizeof(tm));
 	    tm.tm_wday = day_of_week;
 	    our_strftime(buf, sizeof(buf), "%A", &tm);
+	    convert_string_to_utf8(buf, sizeof(buf));
 	    return(buf);
 	}
     }
@@ -1055,7 +1084,7 @@ Args: given_date -- The input string to parse
  
 Returns nothing
 
-The following date fomrats are accepted:
+The following date formats are accepted:
   WKDAY DD MM YY HH:MM:SS ZZ
   DD MM YY HH:MM:SS ZZ
   WKDAY DD MM HH:MM:SS YY ZZ
@@ -2645,7 +2674,7 @@ add_escapes(char *src, char *quote_these_chars, int quoting_char,
     char *ans = NULL;
 
     if(!quote_these_chars)
-      panic("bad arg to add_escapes");
+      alpine_panic("bad arg to add_escapes");
 
     if(src){
 	char *q, *p, *qchar;
@@ -2709,7 +2738,7 @@ add_escapes(char *src, char *quote_these_chars, int quoting_char,
 char *
 copy_quoted_string_asis(char *src)
 {
-    char *q, *p;
+    char *q = NULL, *p;
     int   done = 0, quotes = 0;
 
     if(src){

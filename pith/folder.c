@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: folder.c 1142 2008-08-13 17:22:21Z hubert@u.washingt
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -592,7 +592,7 @@ init_folders(struct pine *ps)
      * collection???
      */
     if(!prime)
-      panic(_("No folder collections defined"));
+      alpine_panic(_("No folder collections defined"));
 
     /*
      * At this point, insert the INBOX mapping as the leading
@@ -966,7 +966,8 @@ build_folder_list(MAILSTREAM **stream, CONTEXT_S *context, char *pat, char *cont
 	  ldata.stream = sp_stream_get(context->context, SP_SAME);
 
 	/* gotta open a new one? */
-	if(!ldata.stream){
+	if((F_OFF(F_CMBND_FOLDER_DISP, ps_global) 
+		|| context->update == LUU_INIT) && !ldata.stream){
 	    ldata.stream = mail_cmd_stream(context, &local_open);
 	    if(stream)
 	      *stream = ldata.stream;
@@ -978,6 +979,7 @@ build_folder_list(MAILSTREAM **stream, CONTEXT_S *context, char *pat, char *cont
 
 	if(!ldata.stream){
 	    context->use &= ~CNTXT_PARTFIND;	/* unset partial find bit */
+	    context->update = LUU_NOMORECHK;
 	    if(we_cancel)
 	      cancel_busy_cue(-1);
 
@@ -1021,6 +1023,7 @@ build_folder_list(MAILSTREAM **stream, CONTEXT_S *context, char *pat, char *cont
       set_read_predicted(0);
     }
 
+    context->update = LUU_INIT;
     if(context->dir && response.response.delim)
       context->dir->delim = response.response.delim;
 
@@ -1404,6 +1407,17 @@ unsigned char *folder_name_decoded(unsigned char *mailbox)
   unsigned char *s;
   s = (unsigned char *) utf8_from_mutf7((unsigned char *) mailbox);
   if (s == NULL) s = (unsigned char *) cpystr(mailbox);
+  return s;
+}
+
+/* mutf7 encoded name of a folder, from its name in utf8.
+ * memory freed by caller.
+ */
+unsigned char *folder_name_encoded(unsigned char *mailbox)
+{
+  unsigned char *s;
+  s = (char *) utf8_to_mutf7(mailbox);
+  if (s == NULL) s = cpystr(mailbox);
   return s;
 }
 
@@ -2356,7 +2370,7 @@ update_folder_unseen_by_stream(MAILSTREAM *strm, unsigned long flags)
 {
   CONTEXT_S *ctxt;
   int ftotal, i;
-  char mailbox_name[MAILTMPLEN];
+  char mailbox_name[MAILTMPLEN], *target;
   char *cn, tmp[MAILTMPLEN];
   FOLDER_S *f;
 
@@ -2371,7 +2385,12 @@ update_folder_unseen_by_stream(MAILSTREAM *strm, unsigned long flags)
     for(i = 0; i < ftotal; i++){
       f = folder_entry(i, FOLDERS(ctxt));
       context_apply(mailbox_name, ctxt, f->name, MAILTMPLEN);
-      if(same_stream_and_mailbox(mailbox_name, strm)
+
+      if((check_for_move_mbox(mailbox_name, NULL, 0, &target)
+		&& strm->snarf.name
+		&& (!strcmp(target,strm->mailbox)
+		    || !strcmp(target,strm->original_mailbox)))
+	 || same_stream_and_mailbox(mailbox_name, strm)
          || (!IS_REMOTE(mailbox_name) && (cn=mailboxfile(tmp,mailbox_name)) && (*cn) && (!strcmp(cn, strm->mailbox) || !strcmp(cn, strm->original_mailbox)))){
 	/* if we failed earlier on this one, give it another go */
 	if(f->last_unseen_update == LUU_NOMORECHK)

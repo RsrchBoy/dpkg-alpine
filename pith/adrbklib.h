@@ -3,7 +3,7 @@
  *
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -852,6 +852,6 @@ void           adrbk_maintenance(void);
 char         **parse_addrlist(char *);
 char          *skip_to_next_addr(char *);
 void           add_forced_entries(AdrBk *);
-
+int	     any_addressbook_in_remote_stream(MAILSTREAM *);
 
 #endif /* PITH_ADRBKLIB_INCLUDED */

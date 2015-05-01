@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: folder.c 1144 2008-08-14 16:53:34Z hubert@u.washingt
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ or search for a folder name.
 
 
 #include "headers.h"
+#include "../c-client/utf8aux.h"
 #include "folder.h"
 #include "keymenu.h"
 #include "status.h"
@@ -906,10 +907,10 @@ context_edit_screen(struct pine *ps, char *func, char *def_nick,
 		    char *def_serv, char *def_path, char *def_view)
 {
     int	       editor_result, i, j;
-    char       nickpart[MAILTMPLEN], servpart[MAILTMPLEN], new_cntxt[MAILTMPLEN];
+    char       servpart[MAILTMPLEN], new_cntxt[MAILTMPLEN];
     char       pathpart[MAILTMPLEN], allbutnick[MAILTMPLEN];
     char       tmp[MAILTMPLEN], *nick, *serv, *path, *view,
-	      *return_cntxt = NULL, *val, *p, new[MAILTMPLEN];
+	      *return_cntxt = NULL, *val, *p;
     char       nickpmt[100], servpmt[100], pathpmt[100], viewpmt[100];
     int        indent;
     PICO       pbf;
@@ -1023,7 +1024,7 @@ context_edit_screen(struct pine *ps, char *func, char *def_nick,
 		  strncat(servpart, "#news.", sizeof(servpart)-1-strlen(servpart));
 	    }
 	    else
-	      panic("Unexpected invalid server");
+	      alpine_panic("Unexpected invalid server");
 	}
 	else
 	  servpart[0] = '\0';
@@ -1735,7 +1736,7 @@ folder_list_text(struct pine *ps, FPROC_S *fp, gf_io_t pc, HANDLE_S **handlesp, 
 	    color_write_for_folder(pc, CLR_NORMAL);
 	}
 
-	if(shown){
+	if(shown && LUU_YES(c_list->update)){
 	    /* Run thru list formatting as necessary */
 	    if((ftotal = folder_total(FOLDERS(c_list))) != 0){
 		int use_color;
@@ -2806,6 +2807,18 @@ folder_lister_choice(SCROLL_S *sparms)
     if(cntxt){
 	
 	FPROC(sparms)->fs->context = cntxt;
+
+	if(!LUU_YES(cntxt->update)){
+	  cntxt->update = LUU_INIT;
+	  refresh_folder_list(cntxt, FPROC(sparms)->fs->no_dirs, TRUE, 
+						FPROC(sparms)->fs->cache_streamp);
+	  if(!LUU_YES(cntxt->update))
+	    q_status_message(SM_ORDER | SM_DING, 3, 3, _("Collection not updated"));
+	  else
+	    rv = 1;
+
+	  return rv;
+	}
 
 	if(cntxt->dir->status & CNTXT_NOFIND){
 	    rv = 1;		/* leave scrolltool to rebuild screen */
@@ -4020,7 +4033,7 @@ add_new_folder(CONTEXT_S *context, EditWhich which, int varnum, char *add_folder
 {
     char	 tmp[MAX(MAXFOLDER,6*MAX_SCREEN_COLS)+1], nickname[32], 
 		*p = NULL, *return_val = NULL, buf[MAILTMPLEN],
-		buf2[MAILTMPLEN], def_in_prompt[MAILTMPLEN];
+		buf2[MAILTMPLEN], def_in_prompt[MAILTMPLEN], orig_folder[2*MAXFOLDER+10];
     HelpType     help;
     PINERC_S    *prc = NULL;
     int          i, rc, offset, exists, cnt = 0, isdir = 0;
@@ -4040,8 +4053,7 @@ add_new_folder(CONTEXT_S *context, EditWhich which, int varnum, char *add_folder
 
     dprint((4, "\n - add_new_folder - \n"));
 
-    add_folder[0] = '\0';
-    nickname[0]   = '\0';
+    nickname[0] = orig_folder[0] = add_folder[0] = '\0';
     inbox = (varnum == V_INBOX_PATH);
 
     if(inbox || context->use & CNTXT_INCMNG){
@@ -4477,6 +4489,17 @@ get_folder_name:
 
 	removing_leading_and_trailing_white_space(&add_folder[offset]);
 
+	/* for non-local folders, transform UTF-8 to MUTF7 */
+	if(offset > 0 && add_folder[0] == '{'){
+	  unsigned char *mutf7 = utf8_to_mutf7((unsigned char *)&add_folder[offset]);
+	  if(mutf7 != NULL){
+	    strncpy(orig_folder, &add_folder[offset], 2*MAXFOLDER+10);
+	    strncpy(&add_folder[offset], (char *) mutf7, add_folderlen-offset);
+	    add_folder[add_folderlen-1] = '\0';
+	    fs_give((void **)&mutf7);
+	  }
+	}
+
 	if(rc == 0 && !(inbox || context->use & CNTXT_INCMNG)
 	   && check_for_move_mbox(add_folder, NULL, 0L, NULL)){
 	    q_status_message(SM_ORDER, 6, 6,
@@ -4590,6 +4613,17 @@ skip_over_folder_input:
 
 	    removing_leading_and_trailing_white_space(&add_folder[offset]);
 
+	    /* for non-local folders, transform UTF-8 to MUTF7 */
+	    if(offset > 0 && add_folder[0] == '{'){
+	      unsigned char *mutf7 = utf8_to_mutf7((unsigned char *)&add_folder[offset]);
+	      if(mutf7 != NULL){
+		strncpy(orig_folder, &add_folder[offset], 2*MAXFOLDER+10);
+		strncpy(&add_folder[offset], (char *) mutf7, add_folderlen-offset);
+		add_folder[add_folderlen-1] = '\0';
+		fs_give((void **)&mutf7);
+	      }
+	    }
+
 	    /* use default */
 	    if(rc == 0 && !add_folder[offset]){
 		q_status_message(SM_ORDER, 4, 4,
@@ -4633,7 +4667,7 @@ skip_over_folder_input:
 
     help = NO_HELP;
     if(!inbox && context->use & CNTXT_INCMNG){
-	snprintf(tmp, sizeof(tmp), _("Nickname for folder \"%s\" : "), &add_folder[offset]);
+	snprintf(tmp, sizeof(tmp), _("Nickname for folder \"%s\" : "), orig_folder[0] ? orig_folder : &add_folder[offset]);
 	tmp[sizeof(tmp)-1] = '\0';
 	while(1){
 	    int flags = OE_APPEND_CURRENT;
@@ -4896,19 +4930,19 @@ skip_over_folder_input:
 
 	if(!inbox)
 	  q_status_message1(SM_ORDER, 0, 3, "Folder \"%s\" created",
-			    add_folder);
+			    orig_folder[0] ? orig_folder : add_folder);
 	return_val = add_folder;
     }
     else if(context_isambig(add_folder)){
 	free_folder_list(context);
 	q_status_message2(SM_ORDER, 0, 3, "%s \"%s\" created",
-			  isdir ? "Directory" : "Folder", add_folder);
+			  isdir ? "Directory" : "Folder", orig_folder[0] ? orig_folder : add_folder);
 	return_val = add_folder;
     }
     else
       q_status_message1(SM_ORDER, 0, 3,
 			"Folder \"%s\" created outside current collection",
-			add_folder);
+			orig_folder[0] ? orig_folder : add_folder);
 
     if(maildropfolder)
       fs_give((void **) &maildropfolder);
@@ -6132,7 +6166,8 @@ folder_select_count(long int *count, int *cmp)
 	    continue;
 
 	  case 14 :		/* toggle comparison */
-	    *cmp = ++(*cmp) % 3;
+	    ++(*cmp);
+	    *cmp = *cmp % 3;
 	    continue;
 
 	  case -1 :		/* cancel */

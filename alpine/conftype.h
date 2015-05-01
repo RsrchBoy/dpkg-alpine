@@ -3,7 +3,7 @@
  *
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,6 +60,13 @@ typedef struct conf_line {
 	    struct flag_table **ftbl;	/* address of start of table */
 	    struct flag_table  *fp;	/* pointer into table for each row */
 	} f;
+#ifdef SMIME
+	struct smime_data {
+	   WhichCerts ctype;
+	   int	      deleted;
+	   char	      address[MAILTMPLEN];
+	} s;
+#endif /* SMIME */
 	struct context_and_screen {
 	    CONTEXT_S  *ct;
 	    CONT_SCR_S *cs;

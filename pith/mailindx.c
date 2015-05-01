@@ -4,7 +4,7 @@ static char rcsid[] = "$Id: mailindx.c 1266 2009-07-14 18:39:12Z hubert@u.washin
 
 /* ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1210,7 +1210,7 @@ setup_index_header_widths(MAILSTREAM *stream)
 		    break;
 		  
 		  default:
-		    panic("Unhandled fixed case in setup_index_header");
+		    alpine_panic("Unhandled fixed case in setup_index_header");
 		    break;
 		}
 	    }
@@ -3319,7 +3319,7 @@ simple_index_line(char *buf, size_t buflen, ICE_S *ice, long int msgno)
     IELEM_S  *ielem;
 
     if(!buf)
-      panic("NULL buf in simple_index_line()");
+      alpine_panic("NULL buf in simple_index_line()");
 
     if(buflen > 0)
       buf[0] = '\0';
@@ -5093,7 +5093,7 @@ prio_str(INDEXDATA_S *idata, IndexColType ctype, ICE_S *ice)
 		break;
 	  
 	      default:
-		panic("Unhandled case in prio_str");
+		alpine_panic("Unhandled case in prio_str");
 		break;
 	    }
 
@@ -5318,6 +5318,7 @@ subj_str(INDEXDATA_S *idata, char *str, size_t strsize, SubjKW kwtype, int openi
     iutf8ncpy(origsubj, sp, len);
 
     origsubj[len] = '\0';
+    replace_tabs_by_space(origsubj);
     removing_trailing_white_space(origsubj);
 
     /*
@@ -6184,6 +6185,7 @@ from_str(IndexColType ctype, INDEXDATA_S *idata, char *str, size_t strsize, ICE_
 	    break;
 	}
     }
+    replace_tabs_by_space(str);
 }
 
 

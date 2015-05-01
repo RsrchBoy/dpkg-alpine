@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: help.c 900 2008-01-05 01:13:26Z hubert@u.washington.
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -216,7 +216,7 @@ debugjournal_to_file(FILE *dfile)
 		p = NULL;
 	    }
 
-	    if(p){
+	    if(p != NULL){
 		if(p->timestamp && p->timestamp[0]
 		   && (fputs(p->timestamp, dfile) == EOF
 		       || fputs(": ", dfile) == EOF))

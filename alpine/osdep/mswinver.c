@@ -1,7 +1,7 @@
 /*
  * ========================================================================
  * Copyright 2006-2009 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,8 @@
  */
 
 #define VER_MAJOR 2
-#define VER_MINOR 1
+#define VER_MINOR 20
+
 extern char datestamp[];
 
 

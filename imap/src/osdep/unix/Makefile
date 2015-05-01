@@ -1,15 +1,7 @@
 # ========================================================================
-# Copyright 1988-2007 University of Washington
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# 
+# Copyright 2008-2011 Mark Crispin
 # ========================================================================
-
+#
 # Program:	C client makefile
 #
 # Author:	Mark Crispin
@@ -21,7 +13,17 @@
 #		Internet: MRC@CAC.Washington.EDU
 #
 # Date:		11 May 1989
-# Last Edited:	17 December 2007
+# Last Edited:	29 August 2011
+#
+# Previous versions of this file were
+#
+# Copyright 1988-2008 University of Washington
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
 
 
 # Command line build parameters
@@ -108,6 +110,7 @@ LOCKPGM=
 LOCKPGM1=/usr/libexec/mlock
 LOCKPGM2=/usr/sbin/mlock
 LOCKPGM3=/etc/mlock
+LOCKPGM4=/usr/bin/mlock
 
 
 # Default formats for creating new mailboxes and for empty mailboxes in the
@@ -199,7 +202,7 @@ a41:	# AIX 4.1 for RS/6000
 	 BASECFLAGS="-g -Dunix=1 -D_BSD -qro -qroconst" \
 	 BASELDFLAGS="-ls"
 
-a52:	# Attempt at AIX 5.2
+a52:	# AIX 5.2
 	$(BUILD) `$(CAT) SPECIALS` OS=$@ \
 	 SIGTYPE=psx CHECKPW=a41 CRXTYPE=nfs \
 	 SPOOLDIR=/var/spool \
@@ -437,7 +440,7 @@ gso:	os_sol.h	# GCC Solaris
 	 ACTIVEFILE=/usr/share/news/active \
 	 RSHPATH=/usr/bin/rsh \
 	 BASECFLAGS="$(GCCCFLAGS)" \
-	 BASELDFLAGS="-lsocket -lnsl -lgen" \
+	 BASELDFLAGS="-lsocket -lnsl -lgen -R/usr/local/ssl/lib" \
 	 RANLIB=true CC=gcc
 
 gsu:	# GCC SUN-OS
@@ -608,6 +611,14 @@ pyr:	# Pyramid
 	 CRXTYPE=nfs \
 	 BASECFLAGS="-g -Dconst="
 
+qn6:	# QNX 6
+	$(BUILD) `$(CAT) SPECIALS` OS=$@ \
+	 CRXTYPE=nfs \
+	 SPOOLDIR=/var/spool \
+	 ACTIVEFILE=/var/lib/news/active \
+	 RSHPATH=/usr/bin/rsh \
+	 BASECFLAGS="$(GCCFLAGS)"
+
 qnx:	# QNX
 	$(BUILD) `$(CAT) SPECIALS` OS=$@ \
 	 CHECKPW=psx LOGINPW=old \
@@ -725,7 +736,7 @@ soc:	os_sol.h	# Solaris with cc
 	 ACTIVEFILE=/usr/share/news/active \
 	 RSHPATH=/usr/bin/rsh \
 	 BASECFLAGS="-g -O -w" \
-	 BASELDFLAGS="-lsocket -lnsl -lgen" \
+	 BASELDFLAGS="-lsocket -lnsl -lgen -R/usr/local/ssl/lib" \
 	 RANLIB=true CC=/opt/SUNWspro/bin/cc
 
 
@@ -773,7 +784,7 @@ sol:	os_sol.h	# Solaris
 	 ACTIVEFILE=/usr/share/news/active \
 	 RSHPATH=/usr/bin/rsh \
 	 BASECFLAGS="-g -O2" \
-	 BASELDFLAGS="-lsocket -lnsl -lgen" \
+	 BASELDFLAGS="-lsocket -lnsl -lgen -R/usr/local/ssl/lib" \
 	 RANLIB=true CC=ucbcc
 
 sos:	# Secure OSF/1
@@ -859,8 +870,8 @@ all:	$(ARCHIVE)
 
 $(ARCHIVE): $(BINARIES)
 	sh -c '$(RM) $(ARCHIVE) || true'
-	@$(CAT) ARCHIVE
-	@$(SH) ARCHIVE
+	@$(CAT) ./ARCHIVE
+	@$(SH) ./ARCHIVE
 
 .c.o:
 	`$(CAT) CCTYPE` -c `$(CAT) CFLAGS` $*.c
@@ -974,7 +985,7 @@ onceenv:
 	 -DACTIVEFILE=\"$(ACTIVEFILE)\" -DNEWSSPOOL=\"$(NEWSSPOOL)\" \
 	 -DRSHPATH=\"$(RSHPATH)\" -DLOCKPGM=\"$(LOCKPGM)\" \
 	 -DLOCKPGM1=\"$(LOCKPGM1)\" -DLOCKPGM2=\"$(LOCKPGM2)\" \
-	 -DLOCKPGM3=\"$(LOCKPGM3)\" > OSCFLAGS
+	 -DLOCKPGM3=\"$(LOCKPGM3)\" -DLOCKPGM4=\"$(LOCKPGM4)\" > OSCFLAGS
 	echo $(BASELDFLAGS) $(EXTRALDFLAGS) > LDFLAGS
 	echo "$(ARRC) $(ARCHIVE) $(BINARIES);$(RANLIB) $(ARCHIVE)" > ARCHIVE
 	echo $(OS) > OSTYPE

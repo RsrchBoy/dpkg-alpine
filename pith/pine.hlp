@@ -3,7 +3,7 @@
 #        T H E   A L P I N E    M E S S A G E   S Y S T E M
 #
 #/* ========================================================================
-# * Copyright 2013 Eduardo Chappa
+# * Copyright 2013-2015 Eduardo Chappa
 # * Copyright 2006-2008 University of Washington
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License");
@@ -140,7 +140,7 @@ with help text for the config screen and the composer that didn't have any
 reasonable place to be called from.
 Dummy change to get revision in pine.hlp
 ============= h_revision =================
-Alpine Commit 23 2013-08-11 11:25:41
+Alpine Commit 67 2015-01-07 21:01:57
 ============= h_news =================
 <HTML>
 <HEAD>
@@ -154,13 +154,15 @@ Version <!--#echo var="ALPINE_VERSION"--> (<!--#echo var="ALPINE_REVISION"-->)
 <!--chtml if pinemode="running"-->
 (built <!--#echo var=ALPINE_COMPILE_DATE-->)
 <!--chtml endif-->
-<BR>Copyright 2013 Eduardo Chappa
+
+<BR>
+<BR>Copyright 2013-2015 Eduardo Chappa
 <BR>Copyright 2006-2008 University of Washington
 </DIV>
 
 <P>
 Alpine is an &quot;Alternatively Licensed Program for Internet
-News and Email&quot; produced until 2008 by the University of Washington.
+News and Email&quot; produced until 2009 by the University of Washington.
 It is intended to be an easy-to-use program for
 sending, receiving, and filing Internet electronic mail messages and
 bulletin board (Netnews) messages.  Alpine is designed to run on a wide
@@ -173,6 +175,187 @@ Apache web server.
 
 Version <!--#echo var="ALPINE_VERSION"--> (<!--#echo var="ALPINE_REVISION"-->)
 addresses bugs found in previous releases and has a few additions as well.
+
+<P>
+Additions include:
+<P>
+
+<UL>
+  <LI> Upgrade UW-IMAP to Panda IMAP from 
+       <A HREF="https://github.com/jonabbey/panda-imap">https://github.com/jonabbey/panda-imap</A>.
+  <LI> S/MIME: Add screen to manage certificates.
+  <LI> S/MIME: Signatures are validated using the user's certificates instead
+       of the ones included in the message. Behavior can be disabled by
+       disabling the option <A href="h_config_smime_use_cert_store">
+	<!--#echo var="FEAT_smime-use-storey-only"--></A>, which is enabled
+       by default.
+  <LI> S/MIME: sign messages using intermediate certificates when needed 
+       and possible.
+  <LI> S/MIME: validation of certificates for servers that modify signed 
+       content.
+  <LI> S/MIME: signed and encrypted messages will be signed first and 
+       encrypted second, so that they can be decoded by other clients.
+  <LI> S/MIME: add the sender certificate to the list of certificates in
+       encrypted messages to make it possible for the sender to decrypt
+       the message they sent.
+  <LI> S/MIME: When transferring certificates to a local container, create 
+       container with default names PublicContainer, PrivateContainer and 
+       CAContainer, as appropriate for these files, unless the user has 
+       provided some other names.
+  <LI> S/MIME: Forwarding a message will include the signed part as part
+       of the text and not as a multipart message, just as the reply
+       command does.
+  <LI> HTML: Style tag in body of html message causes Alpine to not write
+       its content until a new &lt;/style&gt;
+  <LI> HTML: &lt;BR&gt;, &lt;BR /&gt;, and &lt;BR/&gt; are considered
+       the same inline tag; the same is valid for the &lt;HR&gt; tag.
+  <LI> Add support to selective expunge through a subcommand of the 
+       select-apply commands. Read more in the <A 
+       HREF="h_index_cmd_expunge">help</A> for the expunge command.
+  <LI> Pico: New subcommand of the search command, allows to reverse the
+       direction of search.
+  <LI> Unix Alpine: If a password file is defined, and S/MIME is enabled, 
+       the key and certificate used to encrypt the password file are saved 
+       in the ~/.alpine-smime/.pwd directory, or in the directory specified
+       by the -pwdcertdir command line option. 
+       <A HREF="h_password_file_support">Learn more</A>.
+  <LI> Add /tls1, /tls1_1, /tls1_2 and /dtls1 to the definition of a 
+       server to use different ways to connect using ssl, for 
+       example {server.com/tls1} will attempt to connect to 
+       server.com at the ssl imap port (port 993) and establish a 
+       connection using TLSv1. These flags can be used in 
+       conjunction with the /ssl flag, the ssl flag is redundant. 
+       Conversely, however, the /ssl flag does not imply any of 
+       these flags; the /ssl flag means SSLv3 or, if not available, 
+       SSLv2 in the SSL port.
+  <LI> Alpine does not attempt to automatically reopen a collection 
+       that was not opened due to cancellation by the user. 
+       Instead, the user must try to open it explicitly.
+  <LI> Alpine searches for a certificate that matches an email address in
+       all addresses in a certificate (instead of just the first 
+       one) but when it tries to unlock the certificate, it asks 
+       for the password for the first email address in that 
+       certificate.
+  <LI> Style tag in body of html message causes Alpine to not write its content
+       until a new &lt;/style&gt;
+  <LI> Experimental: Write the content-type of a message in 
+       lowercase, as some non-compliant servers do not understand 
+       uppercase content-type, such as those of GMX.de.
+  <LI> Experimental: Do not send the RSET command before attempting
+       to send a message, as this causes a delay in some evily managed
+       servers.
+  <LI> Opening a folder updates recent count in maildrops (this 
+       already works for other types of folders)
+  <LI> Automatically redraw screen after opening an attachment 
+       instead of simply clearing it.
+  <LI> Pico: Justification works without need of a predefined quote 
+       string. This allows justification of blocks of text that are 
+       indented with spaces.
+  <LI> Decode the name of attachment names, so they can be written as part   
+       of the description of the part. 
+  <LI> Check bounds and tie strings off to improve security. Contributed 
+       by James Jerkins.
+  <LI> Replace tabs by spaces in From and Subject fields to control for
+       size in screen of these fields. Change only in index screen display.
+  <LI> Aggregate operations allows bouncing a list of messages using a role.
+       Suggested by Ulf-Dietrich Braumann.
+  <LI> Disable saving new passwords to the password file. Implemented
+       by Louis Raphael from dpslabs.com. <A HREF="h_config_disable_password_file_saving">Learn more.</A>
+  <LI> Makefile: Add $(LIBINTL) to the flags to link rpdump, rpload, 
+     alpined and alpineldap because MAC OSX 10.8 x86_64 needs it. Reported by
+     Charles M. Register.
+</UL>
+
+
+<P>
+Bugs that have been addressed include:
+<UL>
+  <LI> Fix _INIT_ token for reply quote string to include support for 8-bit
+       in personal names. Reported by Lev Gorenstein.
+  <LI> When writing the .pinerc file, lines were truncated if they were longer
+       than 10,000 characters. This could cause data corruption, so now lines
+       are allowed to be of any length.
+  <LI> In Unix Alpine (but not in MAC OSX) fix a problem that made Alpine 
+       remove attachments before they were open by a mailcap viewer. It 
+       requires that the user has an equivalent to a command such as "ps 
+       auxww" to list the list of processes, and check if there is any 
+       program using the attachment. The default is "/bin/ps auxww", but 
+       it can be changed at compile time with the option --with-ps-cmd. 
+       See the help of the variable 
+       <a href="h_config_psleep"><!--#echo var="VAR_mailcap-check-interval"--></a> 
+       for more information.
+  <LI> S/MIME: signed messages that contained an attachment would not validate.
+  <LI> S/MIME: signed and encrypted messages from Thunderbird would not 
+       validate. Thanks to Andreas Schamanek for testing, debugging and 
+       advising during the process of fixing this problem.
+  <LI> S/MIME: Forwarding messages with multipart content-type failed to be signed
+       with &quot;Error writing pipe&quot; message. Reported by Andreas Schamanek
+       and Stefan Mueller.
+  <LI> S/MIME: Certificates are lost when using a pinerc file outside of the 
+       home directory.
+  <LI> S/MIME: Accessing the S/MIME configuration screen would deinitialize
+       SMIME making it not possible to sign or encrypt messages.
+  <LI> S/MIME: Forwarding a signed message might make the body contain mime 
+       information that is not part of the body, and hence making the body
+       of the message seem wrong.
+  <LI> S/MIME Alpine would compute incorrectly the signature of a message 
+       that contains 8bit if the option "Enable 8bit ESMTP Negotiation" is 
+       enabled, the message contains 8bit characters and the smtp server 
+       supports 8bit sending.
+  <LI> When replying to several messages, subject will be decoded first,
+       and then stripped from re/fwd before they are compared to determine
+       the subject of the replied message.
+  <LI> Crash when tcp connection to NNTP server was lost after connection
+       had been established, but lost immediately afterwards.
+  <LI> Crash with message &quot;lock when already locked&quot;, when painting
+       an index was based on scores that needed information from a remote
+       addressbook in the same server as the folder opened. Reported by
+       Peter Koellner.
+  <LI> Crash in message/rfc822 attachments encoded in base64.
+  <LI> Postponed messages whose content-type is text/html, text/enriched and
+       text/richtext are sent with that content-type, even though, after
+       resuming composition, Alpine had changed its type to text/plain.
+  <LI> Alpine cannot handle correctly some characters in the Windows-1256 
+       character set, which might lead to a crash or a corruption in the 
+       screen. Work was done to contain the bug. A more complete fix will 
+       be done in a future release. Reported by Professor Robert Funnell.
+  <LI> WebAlpine: add _GNU_SOURCE to make pubcookie build.
+  <LI> WebAlpine: fail to build with debug disabled. Fix from Sam Hathaway.
+  <LI> Save command did not warn of existence of a message with a deleted 
+       attachment in an aggregate save, unless cursor was positioned on a message 
+       with a deleted attachment. Reported by Florian Herzig.
+  <LI> Transformation of UTF-8 to MUTF7 was not being done when creating a folder
+       in an IMAP server.
+  <LI> DATE tokens were not internally transformed to UTF-8, which made their
+       values not appear complete in the screen. Reported by Werner Scheinast.
+  <LI> Fixes to configure script so that it will not require PAM for every system.
+  <LI> Fix to configure script so that it will use CPPFLAGS instead of 
+       CPPCFLAGS, and so the --with-ssl-include-dir option take effect 
+       during the build. Fix by Ulf-Dietrich Braumann.
+  <LI> Fix in WebAlpine: do not use deprecated dereference in pointer, 
+       needs to use tcl_getstringresult() instead. Reported by 
+       Ulf-Dietrich Braumann.
+  <LI> Quoted string in URL Viewers configuration variable were not 
+       unquoted before passing to viewer.
+  <LI> Fix in configure script to detect location of tcl library; add
+       /usr/local in FreeBSD and fix a bug in configure script that used 
+       $alpine_TCLINC instead of $alpine_TCLINC/tcl.h. Reported and fixed 
+       by Werner Scheinast.
+  <LI> Move SSL configurations from UW-IMAP to configure script, and
+       update OpenSSL configuration for Mac OS X.
+  <LI> Remove -lregex from linker flags when building --with-supplied-regex.
+  <LI> When the download of an attachment is interrumpted, Alpine stills
+     caches what was downloaded, making the download incomplete for 
+     subsequent calls of Alpine attempting to open the attachment. In the 
+     future, Alpine will not cache any downloaded part of the attachment 
+     when it is interrupted.
+</UL>
+<P>
+
+
+<P>
+Version 2.11 addresses bugs found in previous releases and has a few 
+additions as well.
 
 <P>
 Additions include:
@@ -227,7 +410,7 @@ Additions include:
 <UL>
    <LI> Quota report for IMAP folders that support it (press the &quot;@&quot; command in the index screen of such folder).
    <LI> Search a folder for the content of any header with the &quot;;&quot; command. 
-   <LI> Foreign characters are decoded correctly in IMAP folders.
+   <LI> Foreign characters are decoded correctly in IMAP folder names.
    <LI> Question about breaking connection to slow servers includes their name.
    <LI> Internal x-alpine-help: resource locator for sending links to internal help.
    <LI> OpenSuse: Alpine find location of OpenSSL certificates.
@@ -250,7 +433,7 @@ Bugs that have been addressed include:
    <LI> Not display of login prompt during initial keystrokes.
    <LI> justification of long urls breaks them.
    <LI> Incorrect New Mail message when envelope is not available.
-   <LI> Inorrect display of PREFDATE, PREFDATETIME and PREFTIME tokens.
+   <LI> Incorrect display of PREFDATE, PREFDATETIME and PREFTIME tokens.
    <LI> Crash when resizing the screen after display of LDAP search.
    <LI> Crash when redrawing screen while opening a remote folder collection.
    <LI> Infinite loop in scrolltool function during notification of new mail.
@@ -540,7 +723,7 @@ Changes included:
 Details on changes in previous (prerelease) versions of Alpine
 may be found at the following URL:
 <P>
-<CENTER><SAMP><A HREF="http://www.washington.edu/alpine/changes.html">http://www.washington.edu/alpine/changes.html</A></SAMP></CENTER>
+<CENTER><SAMP><A HREF="http://patches.freeiz.com/alpine/release/">http://patches.freeiz.com/alpine/release/</A></SAMP></CENTER>
 <P>
 
 <HR WIDTH="75%"><P>
@@ -558,7 +741,7 @@ accessible via the &quot;?&quot; key (or Ctrl-G in text-input contexts).
 The most current source of information about Alpine,
 including new version availability, is the web page at
 <P>
-<CENTER><SAMP><A HREF="http://www.washington.edu/alpine/">http://www.washington.edu/alpine/</A></SAMP></CENTER>
+<CENTER><SAMP><A HREF="http://patches.freeiz.com/alpine/">http://patches.freeiz.com/alpine/</A></SAMP></CENTER>
 </DD>
 </DL>
 
@@ -576,31 +759,126 @@ General Alpine configuration information can be found
 <A HREF="h_news_config">here</A>.
 <P>
 This is revision (<!--#echo var="ALPINE_REVISION"-->) of the Alpine software.
-Alpine mailbox and <A HREF="http://www.washington.edu/imap/">IMAP</A> server
+Alpine mailbox and <A HREF="https://github.com/jonabbey/panda-imap/">IMAP</A> server
 access is provided by the IMAP Toolkit Environment (c-client library)
 version <!--#echo var="C_CLIENT_VERSION"-->.
 <P> 
-Alpine was developed by the Office of Computing &amp; Communications at
-the University of Washington in Seattle.  A more complete list of
-principal players and key contributors can be found on the credits Web
-page at
+Alpine was developed until 2009 by the Office of Computing 
+&amp; Communications at the University of Washington in Seattle.  
+Since then, the effort of developing Alpine has been continued by
+a community of volunteers who make good software even better!
 
 <P>
-<CENTER><A HREF="http://www.washington.edu/alpine/credits.html">http://www.washington.edu/alpine/credits</A></CENTER>
+Alpine Copyright 2013-2015 Eduardo Chappa, 
+<BR> Copyright 2006-2008 University of Washington.
 
 <P>
-Alpine Copyright 2013 Eduardo Chappa,
-Copyright 2006-2008 University of Washington.
+Additional legal notices can be found <A HREF="h_news_legal">here</A>,
+or instead you can find the Apache License, version 2.0 at the web URL:
 
 <P>
-Additional legal notices can be found <A HREF="h_news_legal">here</A>
-or at the web URL:
-
-<P>
-<CENTER><A HREF="http://www.washington.edu/alpine/overview/legal.html">http://www.washington.edu/alpine/overview/legal</A></CENTER>
+<CENTER><A HREF="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</A></CENTER>
 
 <P>
 &lt;End of Release Notes&gt;
+</BODY>
+</HTML>
+====== h_password_file_support ======
+<HTML>
+<HEAD>
+<TITLE>Encryption for Password File Support Explained</TITLE>
+</HEAD>
+<BODY>
+<H1>Encryption for Password File Support Explained</H1>
+
+Index<BR>
+<OL>
+<LI><A HREF="#content">Explanation</A>
+<LI><A HREF="#example">Example</A>
+</OL>
+
+<P><A NAME="content">Unix Alpine Only.</A>
+
+<P> If your version of Alpine has been built with password file support
+then you can use a special file to save your passwords, and avoid typing
+them every time you open a connection to a remote server.
+
+<P> If your version of Alpine was built with SMIME support, and you have a
+public certificate/private key pair, then Alpine will use such pair to
+encrypt your password file. If you have more than one key/certificate
+pair, Alpine will pick the first pair that it finds that works. You can also
+select a pair, and the way to do this is explained below.
+
+<P> Once a pair has been chosen, it will be copied to the directory 
+~/.alpine-smime/.pwd, and from then on, Alpine will use the pair found in 
+that directory. The first time this process is done, this directory will 
+be created, a key/certificate pair will be copied to it, and this pair 
+will be used in the future to encrypt and decrypt your password file. You 
+can create this directory and copy any key/certificate pair there. You
+can add a self-signed certificate there, if you like, and you can let
+this certificate expire. This will not affect the encryption and decryption
+of the password file.
+
+<P> If you prefer not to use the directory ~/.alpine-smime/.pwd to save 
+your key/certificate pair, you can specify a different one with the 
+-pwdcertdir command line option in Alpine. If the directory specified by 
+this option is not found or there is no valid key/certificate pair there, 
+Alpine will fail to encrypt and decrypt your password file. In other words,
+Alpine will not initialize this directory for you.
+
+<P> Alpine does not care about the names of the key and certificates in 
+this directory, but the private key must have &quot;.key&quot; extension 
+and your public certificate must have the &quot;.crt&quot; extension. The
+name of the private key will be used in the prompt when you are asked
+to unlock your key to decrypt your password.
+
+<P><A NAME="example">An example follows</A>
+
+<P>Assume you have a private key called peter@address.com.key in your, 
+~/.alpine-smime/private directory, and a public certificate called 
+peter@address.com.crt in your ~/.alpine-smime/public directory, and these 
+are your only key/certificate pair.
+
+<P> When Alpine starts for the first time, without command line options, 
+it will check if the directory ~/.alpine-smime/.pwd exists, and if not, 
+it will create it. Then it will go through your keys and certificates and 
+find a pair that it can use, and copy the files peter@address.com.key,
+and peter@address.com.crt to the ~/.alpine-smime/.pwd directory. Alternatively
+you can do the same by copying these files by yourself. This can be done
+with the sequence of commands
+
+<PRE>
+mkdir ~/.alpine-smime/.pwd
+cp ~/.alpine-smime/private/peter@address.com.key ~/.alpine-smime/.pwd
+cp ~/.alpine-smime/public/peter@address.com.crt ~/.alpine-smime/.pwd
+</PRE>
+
+<P> When Alpine starts, you will be asked the password to unlock your
+private key with the prompt.
+
+<PRE>
+Enter password of key &lt;peter@address.com&gt; to unlock password file:
+</PRE>
+
+<P> If you prefer to use different names for your private and public keys 
+in the ~/.alpine-smime/.pwd directory, you can do so, but you must 
+preserve the extension of the files. For example, you can use the names 
+private_key.key and public_cert.crt instead. In this case, the prompt you 
+will see when you are asked to unlock your private key will read
+
+<PRE>
+Enter password of key &lt;private_key&gt; to unlock password file:
+</PRE>
+
+<P>Observe that you do not need to use an existing key/certificate pair, 
+and that you can create a new private key/public certificate pair to 
+encrypt and decrypt your password. However, once one is used, Alpine does 
+not provide a mechanism to switch the encryption and decryption files to 
+another key/certificate pair. This will be implemented in a future 
+release of Alpine.
+
+<P>
+&lt;End of help&gt;
 </BODY>
 </HTML>
 ====== h_tls_failure_details ======
@@ -1255,6 +1533,11 @@ listing of changes in Alpine <!--#echo var="ALPINE_VERSION"-->
 a change in the way an aspect of Alpine works.  There, you will also find notes 
 on Alpine configuration.<P>
 
+  <LI> The main site for Alpine contains information on configuring and solving problems
+       with Alpine, it can be found at
+
+<CENTER><A HREF="http://patches.freeiz.com/alpine/">http://patches.freeiz.com/alpine/</A></CENTER>  
+
   <LI> The Alpine Information Center (maintained by the University of
 	   Washington) World Wide Web site contains, among other things
 	   <UL>
@@ -1305,7 +1588,7 @@ employer, ... ; or
 </UL>
 
 Due to the large number of Alpine installations worldwide, and because we
-receive no funding for it, the Alpine development team <B>cannot provide 
+receive no funding for it, the University of Washington <B>cannot provide 
 individual support services outside the University of Washington</B>.
 <P>
 If you have no local computing support to turn to, the worldwide <b>comp.mail.pine</b>
@@ -1369,13 +1652,14 @@ select Setup/Config to see many of the options available to you. Also note
 that all screens have context-sensitive help text available.<P>
 <!--chtml if pinemode="phone_home"-->
 SPECIAL REQUEST:
-This software is made available as a public service of the
-University of Washington in Seattle. We are no longer actively developing
-the software, but it is still helpful to us to have an idea of how many
-people are using Alpine. Are you willing to be counted as an Alpine user? Pressing 
+This software was originally created and maintained as a public
+service by the University of Washington until 2009; updates are made 
+available as a public service of the Alpine community. It is always 
+helpful to have an idea of how many users are using Alpine. Are you 
+willing to be counted as an Alpine user? Pressing 
 <A HREF="X-Alpine-Phone-Home:">Return</A>
 will send an anonymous (meaning, your real email address will not be revealed) 
-message to the Alpine team at the University of Washington for purposes of tallying.
+message to the Alpine developers for purposes of tallying.
 <P>
 <!--To Exit this screen and continue your Alpine session press "E".-->
 <!--chtml else-->
@@ -1402,13 +1686,14 @@ The Release Notes may be viewed by pressing
 <P>
 <!--chtml if pinemode="phone_home"-->
 SPECIAL REQUEST:
-This software is made available as a public service of the
-University of Washington in Seattle. We are no longer actively developing
-the software, but it is still helpful to us to have an idea of how many
-people are using Alpine. Are you willing to be counted as an Alpine user? Pressing 
+This software was originally created and maintained as a public
+service by the University of Washington until 2009; updates are made 
+available as a public service of the Alpine community. It is always 
+helpful to have an idea of how many users are using Alpine. Are you 
+willing to be counted as an Alpine user? Pressing 
 <A HREF="X-Alpine-Phone-Home:">Return</A>
 will send an anonymous (meaning, your real email address will not be revealed) 
-message to the Alpine team at the University of Washington for purposes of tallying.
+message to the Alpine developers for purposes of tallying.
 <P>
 <!--To Exit this screen and continue your Alpine session press "E".-->
 <!--chtml else-->
@@ -1432,14 +1717,15 @@ documented in the Release Notes, which may be viewed by pressing
 <P>
 <!--chtml if pinemode="phone_home"-->
 SPECIAL REQUEST:
-This software is made available as a public service of the
-University of Washington in Seattle. We are no longer actively developing
-the software, but it is still helpful to us to have an idea of how many
-people are using Alpine. Are you willing to be counted as an Alpine user? Pressing 
+This software was originally created and maintained as a public
+service by the University of Washington until 2009; updates are made 
+available as a public service of the Alpine community. It is always 
+helpful to have an idea of how many users are using Alpine. Are you 
+willing to be counted as an Alpine user? Pressing 
 <A HREF="X-Alpine-Phone-Home:">Return</A>
 will send an anonymous (meaning, your real email address will not be revealed) 
-message to the Alpine team at the University of Washington for purposes of tallying.
-
+message to the Alpine developers for purposes of tallying.
+<P>
 <!--To Exit this screen and continue your Alpine session press "E".-->
 <!--chtml else-->
 To Exit this screen and continue your Alpine session press "Return".
@@ -1460,7 +1746,7 @@ Version <!--#echo var="ALPINE_VERSION"-->
 <BR>(built <!--#echo var=ALPINE_COMPILE_DATE-->)
 <!--chtml endif-->
 </DIV>
-<CENTER>Copyright 2013 Eduardo Chappa,
+<CENTER>Copyright 2013-2015 Eduardo Chappa,
 <BR>Copyright 2006-2008 University of Washington.
 </CENTER>
 
@@ -1536,7 +1822,7 @@ The &quot;NextLink&quot; and &quot;PrevLink&quot; commands
 <H1>Introduction</H1>
 
 Alpine is an &quot;Alternatively Licensed Program for Internet
-News and Email&quot; produced until 2008 by the University of Washington.
+News and Email&quot; produced until 2009 by the University of Washington.
 It is intended to be an easy-to-use program for
 sending, receiving, and filing Internet electronic mail messages and
 bulletin board (Netnews/Usenet) messages. Alpine supports the following
@@ -1619,14 +1905,10 @@ to browse the release notes.  These include changes since the last release,
 configuration information, the history of the Alpine
 project, credits, and legal notices.
 
-Alpine files and documentation are available via FTP or WWW:
+Alpine releases are available via the world wide web at
 <P>
 <CENTER><SAMP><A 
-HREF="ftp://ftp.cac.washington.edu/alpine/">ftp://ftp.cac.washington.edu/alpine/</A>
-</SAMP></CENTER>
-or
-<CENTER><SAMP><A 
-HREF="http://www.washington.edu/alpine/">http://www.washington.edu/alpine/</A></SAMP
+HREF="http://patches.freeiz.com/alpine/release/">http://patches.freeiz.com/alpine/release/</A></SAMP
 ></CENTER>
 <P>
 
@@ -2507,6 +2789,7 @@ if the connection is encrypted.
 <P>
 <UL>
 <LI> <A HREF="h_config_disable_password_caching"><!--#echo var="FEAT_disable-password-caching"--></A> feature to disable password caching </LI>
+<LI> <A HREF="h_config_disable_password_file_saving"><!--#echo var="FEAT_disable-password-file-saving"--></A> Disable password file saving</LI>
 <LI> <A HREF="h_config_mailcap_params"><!--#echo var="FEAT_enable-mailcap-param-substitution"--></A> feature </LI>
 <LI> <A HREF="h_config_disable_auths"><!--#echo var="VAR_disable-these-authenticators"--></A> option </LI>
 </UL>
@@ -2530,21 +2813,8 @@ help section explaining where to look for
 get assistance.
 <P>
 
-Please note: Alpine has been adapted to several other operating systems
-besides those directly supported by the University of Washington; see:
-<P>
-<CENTER><A HREF="http://www.washington.edu/alpine/overview/non-UW.html">http://www.washington.edu/alpine/overview/non-UW.html</A></CENTER>
-
-<P>
-Inquiries about these other ports (e.g., VMS and AmigaDOS) should be
-directed to the individual or group that did the adaptation. 
-<P>
-
 <ADDRESS>
-   Alpine&nbsp;Development&nbsp;Team&nbsp;&lt;alpine-contact@u.washington.edu&gt;<BR>
-   Computing&nbsp;&amp;&nbsp;Communications<BR>
-   University&nbsp;of&nbsp;Washington<BR>
-   Seattle,&nbsp;WA&nbsp;98195<BR>
+   Eduardo Chappa &lt;chappa@gmx.com&gt;
 </ADDRESS>
 
 <P>
@@ -2605,7 +2875,7 @@ HREF="h_main_kblock">Lock&nbsp;Keyboard</A><BR>
 &nbsp;S&nbsp;&nbsp;<A 
 HREF="h_main_setup">SETUP</A>&nbsp;functions&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;G&nbsp;&nbsp;<A 
 HREF="h_common_goto">Goto</A>&nbsp;a&nbsp;specified&nbsp;folder<BR>
-&nbsp;Q&nbsp;&nbsp;Quit&nbsp;Alpine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;J&nbsp;&nbsp;<A HREF="h_main_journal">Journal</A>&nbsp;of&nbsp;status&nbsp;messages<BR>
+&nbsp;Q&nbsp;&nbsp;Quit&nbsp;Alpine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;J&nbsp;&nbsp;<A HREF="h_main_journal">Journal</A>&nbsp;of&nbsp;status&nbsp;messages<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;&nbsp;<A 
 HREF="h_common_role">Compose&nbsp;message&nbsp;using&nbsp;a&nbsp;role</a><BR>
 <!--chtml endif-->
@@ -3121,7 +3391,6 @@ There are also additional details on
 &lt;End of help on this topic&gt;
 </BODY>
 </HTML>
-
 ====== h_help_index ======
 <HTML>
 <HEAD>
@@ -3511,6 +3780,7 @@ There are also additional details on
 <li><a href="h_config_image_viewer">OPTION: <!--#echo var="VAR_image-viewer"--></a>
 <li><a href="h_config_inbox_path">OPTION: <!--#echo var="VAR_inbox-path"--></a>
 <li><a href="h_config_archived_folders">OPTION: <!--#echo var="VAR_incoming-archive-folders"--></a>
+<li><a href="h_config_psleep">OPTION: <!--#echo var="VAR_mailcap-check-interval"--></a>
 <li><a href="h_config_incoming_interv">OPTION: <!--#echo var="VAR_incoming-check-interval"--></a>
 <li><a href="h_config_incoming_second_interv">OPTION: <!--#echo var="VAR_incoming-check-interval-secondary"--></a>
 <li><a href="h_config_incoming_list">OPTION: <!--#echo var="VAR_incoming-check-list"--></a>
@@ -3732,6 +4002,7 @@ There are also additional details on
 <li><a href="h_config_smime_encrypt_by_default">S/MIME FEATURE: <!--#echo var="FEAT_smime-encrypt-by-default"--></a>
 <li><a href="h_config_smime_remember_passphrase">S/MIME FEATURE: <!--#echo var="FEAT_smime-remember-passphrase"--></a>
 <li><a href="h_config_smime_sign_by_default">S/MIME FEATURE: <!--#echo var="FEAT_smime-sign-by-default"--></a>
+<li><a href="h_config_smime_use_cert_store">S/MIME FEATURE: <!--#echo var="FEAT_smime-use-store-only"--></a>
 <li><a href="h_config_smime_pubcerts_in_keychain">S/MIME FEATURE: <!--#echo var="FEAT_publiccerts-in-keychain"--></a>
 <li><a href="h_config_smime_cacertcon">S/MIME OPTION: <!--#echo var="VAR_smime-cacert-container"--></a>
 <li><a href="h_config_smime_cacertdir">S/MIME OPTION: <!--#echo var="VAR_smime-cacert-directory"--></a>
@@ -3745,6 +4016,9 @@ There are also additional details on
 <li><a href="h_config_smime_transfer_priv_to_dir">S/MIME: Transfer Private Keys to Directory</a>
 <li><a href="h_config_smime_transfer_pub_to_con">S/MIME: Transfer Public Certs to Container</a>
 <li><a href="h_config_smime_transfer_pub_to_dir">S/MIME: Transfer Public Certs to Directory</a>
+<li><a href="h_config_smime_public_certificates">S/MIME: Manage Public Certificates</a>
+<li><a href="h_config_smime_private_keys">S/MIME: Manage Private Keys</a>
+<li><a href="h_config_smime_certificate_authorities">S/MIME: Manage Certificate Authorities</a>
 <li><a href="h_index_cmd_sort">Sort Command</a>
 <li><a href="h_compose_spell">Spell Check Command</a>
 <li><a href="h_common_suspend">Suspend Command</a>
@@ -4537,17 +4811,17 @@ F3&nbsp;&nbsp;Select&nbsp;Current&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;F4&nbsp;&nbsp;<A 
 F6&nbsp;&nbsp;<A HREF="h_common_role">Compose using a role</A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;F10&nbsp;<A HREF="h_index_collapse_expand">Collapse/Expand</A>&nbsp;Thread<BR>
 <BR>
 <!--chtml else-->
-Navigating&nbsp;the&nbsp;List&nbsp;of&nbsp;Messages&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Operations&nbsp;on&nbsp;the&nbsp;Current&nbsp;Message<BR>
--------------------------------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;---------------------------------<BR>
-&nbsp;P&nbsp;&nbsp;&nbsp;Move&nbsp;to&nbsp;the&nbsp;previous&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;&nbsp;&nbsp;View&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%&nbsp;&nbsp;<A HREF="h_common_print">Print</A><BR>
-&nbsp;N&nbsp;&nbsp;&nbsp;Move&nbsp;to&nbsp;the&nbsp;next&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R&nbsp;&nbsp;<A HREF="h_common_reply">Reply</A>&nbsp;to&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;F&nbsp;&nbsp;<A HREF="h_common_reply">Forward</A><BR>
-&nbsp;-&nbsp;&nbsp;&nbsp;Show&nbsp;previous&nbsp;screen&nbsp;of&nbsp;messages&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;D&nbsp;&nbsp;<A HREF="h_common_delete">Mark&nbsp;for&nbsp;deletion</A><BR>
-Spc&nbsp;&nbsp;(space&nbsp;bar)&nbsp;Show&nbsp;next&nbsp;screen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;U&nbsp;&nbsp;<A HREF="h_common_delete">Undelete</A>&nbsp;(remove&nbsp;deletion&nbsp;mark)<BR>
-&nbsp;J&nbsp;&nbsp;&nbsp;<A HREF="h_common_jump">Jump</A>&nbsp;to&nbsp;a&nbsp;specific&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;T&nbsp;&nbsp;<A HREF="h_common_take">Take&nbsp;Address</A>&nbsp;into&nbsp;Address&nbsp;Book<BR>
-&nbsp;W&nbsp;&nbsp;&nbsp;<A HREF="h_index_cmd_whereis">Whereis</A>&nbsp;--&nbsp;search&nbsp;for&nbsp;a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;S&nbsp;&nbsp;<A HREF="h_common_save">Save</A>&nbsp;into&nbsp;an&nbsp;email&nbsp;folder<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;specific&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;E&nbsp;&nbsp;<A HREF="h_common_save">Export</A>&nbsp;as&nbsp;a&nbsp;plain&nbsp;text&nbsp;file<BR>
-Tab&nbsp;&nbsp;<A HREF="h_common_nextnew">Next&nbsp;new</A>&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;B&nbsp;&nbsp;<A HREF="h_common_bounce">Bounce</A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;<A HREF="h_common_flag">Flag</A><BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;<A HREF="h_common_pipe">Pipe</A>&nbsp;to&nbsp;a&nbsp;Unix&nbsp;Command<BR>
+Navigating&nbsp;the&nbsp;List&nbsp;of&nbsp;Messages&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Operations&nbsp;on&nbsp;the&nbsp;Current&nbsp;Message<BR>
+-------------------------------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;---------------------------------<BR>
+&nbsp;P&nbsp;&nbsp;&nbsp;Move&nbsp;to&nbsp;the&nbsp;previous&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;&nbsp;&nbsp;View&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%&nbsp;&nbsp;<A HREF="h_common_print">Print</A><BR>
+&nbsp;N&nbsp;&nbsp;&nbsp;Move&nbsp;to&nbsp;the&nbsp;next&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R&nbsp;&nbsp;<A HREF="h_common_reply">Reply</A>&nbsp;to&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;F&nbsp;&nbsp;<A HREF="h_common_reply">Forward</A><BR>
+&nbsp;-&nbsp;&nbsp;&nbsp;Show&nbsp;previous&nbsp;screen&nbsp;of&nbsp;messages&nbsp;&nbsp;&nbsp;&nbsp;D&nbsp;&nbsp;<A HREF="h_common_delete">Mark&nbsp;for&nbsp;deletion</A><BR>
+Spc&nbsp;&nbsp;(space&nbsp;bar)&nbsp;Show&nbsp;next&nbsp;screen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;U&nbsp;&nbsp;<A HREF="h_common_delete">Undelete</A>&nbsp;(remove&nbsp;deletion&nbsp;mark)<BR>
+&nbsp;J&nbsp;&nbsp;&nbsp;<A HREF="h_common_jump">Jump</A>&nbsp;to&nbsp;a&nbsp;specific&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;T&nbsp;&nbsp;<A HREF="h_common_take">Take&nbsp;Address</A>&nbsp;into&nbsp;Address&nbsp;Book<BR>
+&nbsp;W&nbsp;&nbsp;&nbsp;<A HREF="h_index_cmd_whereis">Whereis</A>&nbsp;--&nbsp;search&nbsp;for&nbsp;a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;S&nbsp;&nbsp;<A HREF="h_common_save">Save</A>&nbsp;into&nbsp;an&nbsp;email&nbsp;folder<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;specific&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;E&nbsp;&nbsp;<A HREF="h_common_save">Export</A>&nbsp;as&nbsp;a&nbsp;plain&nbsp;text&nbsp;file<BR>
+Tab&nbsp;&nbsp;<A HREF="h_common_nextnew">Next&nbsp;new</A>&nbsp;message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;B&nbsp;&nbsp;<A HREF="h_common_bounce">Bounce</A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;<A HREF="h_common_flag">Flag</A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;<A HREF="h_common_pipe">Pipe</A>&nbsp;to&nbsp;a&nbsp;Unix&nbsp;Command<BR>
 Miscellaneous&nbsp;Operations<BR>
 ------------------------<BR>
 &nbsp;G&nbsp;&nbsp;&nbsp;<A HREF="h_common_goto">Goto</A>&nbsp;a&nbsp;specified&nbsp;folder&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;General&nbsp;Alpine&nbsp;Commands<BR>
@@ -5674,6 +5948,22 @@ the text from the current folder.  With newsgroups or shared mailboxes,
 you don't have permission to actually remove the message, so it is an
 exclude -- Alpine removes the message from your view of the folder even
 though it is not technically gone.
+
+<P> A selective expunge command is available in IMAP folders that support 
+the UID EXPUNGE extension in <A 
+HREF="http://tools.ietf.org/html/rfc4315">RFC 4315</A> as well as for all 
+other folders (local folders in all formats, POP3 inbox, and newsgroups) 
+as a subcommand of the apply command. If some selected messages are marked 
+deleted, then the apply command will offer the eXpunge command, which when 
+executed will only expunge those messages that are selected and deleted.
+
+<P> 
+Observe that the expunge command (when not used from the apply command) 
+will expunge/exclude all deleted messages from the folder, and so all 
+messages marked deleted will be expunged, regardless of if they are 
+selected or not. In other words, there is no protection against 
+potentially expunging more messages than only those that have been 
+selected and deleted.
 <P>
 
 The configuration features
@@ -7579,7 +7869,7 @@ a folder name used in a previous Save.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Messages               General Alpine Commands
--------------------------------               ---------------------
+-------------------------------               -----------------------
  F5   Move to previous message                 F1   Show this help text
  F6   Move to next message
  F7   Show previous screen of messages
@@ -7595,7 +7885,7 @@ Message Selection Commands
 <!--chtml else-->
 <PRE>
 Navigating the List of Messages               General Alpine Commands
--------------------------------               ---------------------
+-------------------------------               -----------------------
   P  Move to previous message                  ?  Show this help text
   N  Move to next message
   -  Show previous screen of messages
@@ -7838,7 +8128,7 @@ F12 WhereIs
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Address                ?  Display this help text
  N  Next Address                E  Exit without selecting anything
  -  Previous page               %  Print
@@ -7888,7 +8178,7 @@ F12 WhereIs
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Rule                   ?  Display this help text
  N  Next Rule                   E  Exit without selecting anything
  -  Previous page               %  Print
@@ -7950,7 +8240,7 @@ F12 WhereIs
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Priority               ?  Display this help text
  N  Next Priority               E  Exit without selecting anything
  -  Previous page               %  Print
@@ -8011,7 +8301,7 @@ F12 WhereIs
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Keyword                ?  Display this help text
  N  Next Keyword                E  Exit without selecting anything
  -  Previous page               %  Print
@@ -8064,7 +8354,7 @@ F12 WhereIs
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Character Set          ?  Display this help text
  N  Next Character Set          E  Exit without selecting anything
  -  Previous page               %  Print
@@ -8118,7 +8408,7 @@ F12 WhereIs
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Charset                ?  Display this help text
  N  Next Charset                E  Exit without selecting anything
  -  Previous page               %  Print
@@ -8176,7 +8466,7 @@ F12 WhereIs
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Keyword                ?  Display this help text
  N  Next Keyword                E  Exit without selecting anything
  -  Previous page               %  Print
@@ -8234,7 +8524,7 @@ F12 WhereIs
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Folder                 ?  Display this help text
  N  Next Folder                ^C  exit without changing anything
  -  Previous page               %  Print
@@ -8297,7 +8587,7 @@ F12 Whereis (search role nicknames)
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Role                     ?  Display this help text
  N  Next Role                     E  Exit without a selection
  -  Previous page
@@ -8358,7 +8648,7 @@ F12 Whereis
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Previous addrbook          ?  Display this help text
  N  Next addrbook
  -  Previous page
@@ -8983,7 +9273,7 @@ F12 Whereis (search role nicknames)
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Role                     ?  Display this help text
  N  Next Role                     E  Back to MAIN Alpine menu
  -  Previous page
@@ -9292,7 +9582,7 @@ F12 Whereis (search rule nicknames)
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev rule                     ?  Display this help text
  N  Next rule                     E  Back to MAIN Alpine menu
  -  Previous page
@@ -9460,7 +9750,7 @@ F12 Whereis (search rule nicknames)
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev rule                     ?  Display this help text
  N  Next rule                     E  Back to MAIN Alpine menu
  -  Previous page
@@ -9589,7 +9879,7 @@ F12 Whereis (search rule nicknames)
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev rule                     ?  Display this help text
  N  Next rule                     E  Back to MAIN Alpine menu
  -  Previous page
@@ -9728,7 +10018,7 @@ F12 Whereis (search filter nicknames)
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Filter                   ?  Display this help text
  N  Next Filter                   E  Back to MAIN Alpine menu
  -  Previous page
@@ -9927,7 +10217,7 @@ F12 Whereis (search rule nicknames)
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev rule                     ?  Display this help text
  N  Next rule                     E  Back to MAIN Alpine menu
  -  Previous page
@@ -10076,7 +10366,7 @@ F12 Whereis (search directory server titles)
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
+-------------------------      -----------------------
  P  Prev Directory Server         ?  Display this help text
  N  Next Directory Server         E  Back to MAIN Alpine menu
  -  Previous page
@@ -10266,7 +10556,7 @@ Spc  (space bar) Show next page           E  Export to file
                                           U  Import from file to folder
 
 FOLDER LIST Screen Commands              General Alpine Command
----------------------------              ---------------------
+---------------------------              -----------------------
  A  Add a folder                          O  Show all other available commands
  G  Specify a folder to go to             ?  Show Help text
  I  Show MESSAGE INDEX of current folder  M  MAIN MENU Screen
@@ -10658,7 +10948,7 @@ folders and select one to open.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
  P   Move to previous folder               ?   Show this help text
  N   Move to next folder
  -   Show previous screen of folders
@@ -10673,7 +10963,7 @@ Folder Selection Commands
 <!--chtml else-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
 F5   Move to previous folder               F1  Show this help text
 F6   Move to next folder
 F7   Show previous screen of folders
@@ -10724,7 +11014,7 @@ UnSbscrbe command.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Newsgroups          General Alpine Commands
----------------------------------          ---------------------
+---------------------------------          -----------------------
 F5   Move to previous group                F1   Show this help text
 F6   Move to next group
 F7   Show previous screen of groups
@@ -10740,7 +11030,7 @@ F4  Subscribe to the currently highlighted newsgroup
 <!--chtml else-->
 <PRE>
 Navigating the List of Newsgroups          General Alpine Commands
----------------------------------          ---------------------
+---------------------------------          -----------------------
  P   Move to previous group                ?   Show this help text
  N   Move to next group
  -   Show previous screen of groups
@@ -10787,7 +11077,7 @@ the available newsgroups and select one to post news to.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Newsgroups          General Alpine Commands
----------------------------------          ---------------------
+---------------------------------          -----------------------
 F5   Move to previous group                F1  Show this help text
 F6   Move to next group
 F7   Show previous screen of groups
@@ -10802,7 +11092,7 @@ F4   Select the currently highlighted newsgroup
 <!--chtml else-->
 <PRE>
 Navigating the List of Newsgroups          General Alpine Commands
----------------------------------          ---------------------
+---------------------------------          -----------------------
  P   Move to previous group                ?  Show this help text
  N   Move to next group
  -   Show previous screen of groups
@@ -10832,7 +11122,7 @@ folders and select one to use for saving the current message.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
 F5   Move to previous folder               F1  Show this help text
 F6   Move to next folder
 F7   Show previous screen of folders
@@ -10848,7 +11138,7 @@ F11  AddNew folder (just like Select, but you type in a new folder name)
 <!--chtml else-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
  P   Move to previous folder               ?  Show this help text
  N   Move to next folder
  -   Show previous screen of folders
@@ -10883,7 +11173,7 @@ current message.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
 F5   Move to previous folder               F1  Show this help text
 F6   Move to next folder
 F7   Show previous screen of folders
@@ -10899,7 +11189,7 @@ F11  AddNew folder (just like Select, but you type in a new folder name)
 <!--chtml else-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
  P   Move to previous folder               ?  Show this help text
  N   Move to next folder
  -   Show previous screen of folders
@@ -10934,7 +11224,7 @@ in a Pattern.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
 F5   Move to previous folder               F1  Show this help text
 F6   Move to next folder
 F7   Show previous screen of folders
@@ -10950,7 +11240,7 @@ F11  AddNew folder (just like Select, but you type in a new folder name)
 <!--chtml else-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
  P   Move to previous folder               ?  Show this help text
  N   Move to next folder
  -   Show previous screen of folders
@@ -10984,7 +11274,7 @@ folders and select one to use as a Stay-Open folder.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
 F5   Move to previous folder               F1  Show this help text
 F6   Move to next folder
 F7   Show previous screen of folders
@@ -11000,7 +11290,7 @@ F11  AddNew folder (just like Select, but you type in a new folder name)
 <!--chtml else-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
  P   Move to previous folder               ?  Show this help text
  N   Move to next folder
  -   Show previous screen of folders
@@ -11035,7 +11325,7 @@ matching this filter will be moved.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
 F5   Move to previous folder               F1  Show this help text
 F6   Move to next folder
 F7   Show previous screen of folders
@@ -11051,7 +11341,7 @@ F11  AddNew folder (just like Select, but you type in a new folder name)
 <!--chtml else-->
 <PRE>
 Navigating the List of Folders             General Alpine Commands
-------------------------------             ---------------------
+------------------------------             -----------------------
  P   Move to previous folder               ?  Show this help text
  N   Move to next folder
  -   Show previous screen of folders
@@ -11099,9 +11389,9 @@ F12 Whereis (search address book titles)
 <!--chtml else-->
 <PRE>
 Navigation                     General Alpine Commands
------------------------        ---------------------
- P  Prev Address Book             ?  Display this help text
- N  Next Address Book             E  Back to MAIN Alpine menu
+-----------------------        -----------------------
+ P  Prev Address Book           ?  Display this help text
+ N  Next Address Book           E  Back to MAIN Alpine menu
  -  Previous page
 Spc (space bar) Next page
  W  WhereIs (search for word in address book titles)
@@ -11190,7 +11480,7 @@ F12 Whereis (search for word)
 <!--chtml else-->
 <PRE>
 Navigation                       General Alpine Commands
------------------------          ---------------------
+-----------------------          -----------------------
  P  Previous Entry                ?  Display this help text
  N  Next Entry                    O  Show all other available commands
  -  Previous page                 &lt;  Back to MAIN Alpine menu
@@ -11270,7 +11560,7 @@ F3  Select                              F6  Zoom (or unZoom)
 F5  Select Current                      F7  Apply Command to Selection  
 <!--chtml else-->
 Address Book Navigation        General Alpine Commands
------------------------        ---------------------
+-----------------------        -----------------------
  P  Prev Address                  ?  Display this help text
  N  Next Address                  O  Show all other available commands
  -  Previous page of address book M  Back to MAIN MENU
@@ -11604,7 +11894,7 @@ contain entries for users on multiple machines within the organization.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Messages               General Alpine Commands
--------------------------------               ---------------------
+-------------------------------               -----------------------
 F5   Move to previous entry                   F1  Show this help text
 F6   Move to next entry
 F7   Show previous screen of address book
@@ -11619,8 +11909,8 @@ F4   Select the currently highlighted entry
 <!--chtml else-->
 <PRE>
 Navigating the List of Messages               General Alpine Commands
--------------------------------               ---------------------
- P   Move to previous entry                   ?  Show this help text
+-------------------------------               -----------------------
+ P   Move to previous entry                    ?  Show this help text
  N   Move to next entry
  -   Show previous screen of address book
 Spc  (space bar) Show next screen of address book
@@ -11664,7 +11954,7 @@ help text.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Address Books       General Alpine Commands
--------------------------------            ---------------------
+------------------------------------       -----------------------
 F4   View the highlighted address book
 F5   Move to previous address book         F1  Show this help text
 F6   Move to next address book
@@ -11681,7 +11971,7 @@ F9   Change to ListMode
 <!--chtml else-->
 <PRE>
 Navigating the List of Address Books       General Alpine Commands
--------------------------------            ---------------------
+------------------------------------       -----------------------
  &gt;   View the highlighted address book
  P   Move to previous address book         ?  Show this help text
  N   Move to next address book
@@ -11740,7 +12030,7 @@ help text.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Messages                 General Alpine Commands
--------------------------------                 ---------------------
+-------------------------------                 -----------------------
 F5   Move to previous entry                     F1  Show this help text
 F6   Move to next entry
 F7   Show previous screen of address book
@@ -11756,7 +12046,7 @@ F9   Change to ListMode
 <!--chtml else-->
 <PRE>
 Navigating the List of Messages                 General Alpine Commands
--------------------------------                 ---------------------
+-------------------------------                 -----------------------
  P   Move to previous entry                     ?  Show this help text
  N   Move to next entry
  -   Show previous screen of address book
@@ -11814,7 +12104,7 @@ help text.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Messages                 General Alpine Commands
--------------------------------                 ---------------------
+-------------------------------                 -----------------------
 F5   Move to previous entry                     F1  Show this help text
 F6   Move to next entry
 F7   Show previous screen of address book
@@ -11831,7 +12121,7 @@ F9   Set or Unset the highlighted entry
 <!--chtml else-->
 <PRE>
 Navigating the List of Messages                 General Alpine Commands
--------------------------------                 ---------------------
+-------------------------------                 -----------------------
  P   Move to previous entry                     ?  Show this help text
  N   Move to next entry
  -   Show previous screen of address book
@@ -11878,7 +12168,7 @@ help text.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Messages                 General Alpine Commands
--------------------------------                 ---------------------
+-------------------------------                 -----------------------
 F5   Move to previous entry                     F1  Show this help text
 F6   Move to next entry
 F7   Show previous screen of address book
@@ -11893,7 +12183,7 @@ F4   Select the currently highlighted entry
 <!--chtml else-->
 <PRE>
 Navigating the List of Messages                 General Alpine Commands
--------------------------------                 ---------------------
+-------------------------------                 -----------------------
  P   Move to previous entry                     ?  Show this help text
  N   Move to next entry
  -   Show previous screen of address book
@@ -11934,7 +12224,7 @@ help text.
 <!--chtml if pinemode="function_key"-->
 <PRE>
 Navigating the List of Messages                 General Alpine Commands
--------------------------------                 ---------------------
+-------------------------------                 -----------------------
 F5   Move to previous entry                     F1  Show this help text
 F6   Move to next entry
 F7   Show previous screen of address book
@@ -11949,7 +12239,7 @@ F4   Select the currently highlighted entry
 <!--chtml else-->
 <PRE>
 Navigating the List of Messages                 General Alpine Commands
--------------------------------                 ---------------------
+-------------------------------                 -----------------------
  P   Move to previous entry                     ?  Show this help text
  N   Move to next entry
  -   Show previous screen of address book
@@ -18441,7 +18731,7 @@ It has the format MMM DD. For example, &quot;Oct 23&quot;.
 The feature
 <A HREF="h_config_dates_to_local"><!--#echo var="FEAT_convert-dates-to-localtime"--></A>,
 which adjusts for the timezone the message was sent from,
-may have an affect on the value of this token as well as the values of
+may have an effect on the value of this token as well as the values of
 all of the other DATE or TIME tokens.
 Some of the DATE and TIME tokens are displayed in a locale-specific
 way unless the option
@@ -19778,6 +20068,59 @@ Alpine must be linked with an SSL library for this option to be operational.
 
 </DD>
 
+<DT>TLS1</DT>
+<DD>
+This parameter indicates that the connection to the server will be made
+over the SSL port, but using the TLSv1 protocol, instead of the usual
+SSLv3 or SSLv2 protocols.
+Alpine must be linked with an SSL library for this option to be operational.
+
+<P>
+<CENTER><SAMP>/tls1</SAMP></CENTER>
+<P>
+
+</DD>
+
+<DT>DTLS1</DT>
+<DD>
+This parameter indicates that the connection to the server will be made
+over the SSL port, but using the DTLSv1 protocol, instead of the usual
+SSLv3 or SSLv2 protocols.
+Alpine must be linked with an SSL library for this option to be operational.
+
+<P>
+<CENTER><SAMP>/dtls1</SAMP></CENTER>
+<P>
+
+</DD>
+
+<DT>TLS1_1</DT>
+<DD>
+This parameter indicates that the connection to the server will be made
+over the SSL port, but using the TLSv1.1 protocol, instead of the usual
+SSLv3 or SSLv2 protocols.
+Alpine must be linked with an SSL library for this option to be operational.
+
+<P>
+<CENTER><SAMP>/tls1_1</SAMP></CENTER>
+<P>
+
+</DD>
+
+<DT>TLS1_2</DT>
+<DD>
+This parameter indicates that the connection to the server will be made
+over the SSL port, but using the TLSv1.2 protocol, instead of the usual
+SSLv3 or SSLv2 protocols.
+Alpine must be linked with an SSL library for this option to be operational.
+
+<P>
+<CENTER><SAMP>/tls1_2</SAMP></CENTER>
+<P>
+
+</DD>
+
+
 <DT>NoValidate-Cert</DT>
 <DD>Do not validate certificates (for TLS or SSL connections) from the server.
 This is needed if the server uses self-signed certificates or if Alpine
@@ -19853,6 +20196,18 @@ This might be useful to avoid long timeouts caused by rsh firewalls, for
 example.
 <P>
 </DD>
+
+<DT>Loser</DT>
+<DD>This option makes sense only for IMAP servers that do not perform
+a SEARCH command correctly. If your filtering rules
+fail to filter some messages, that should have been filtered, then this
+option will make Alpine download all data necessary to perform that search.
+There is a performance penalty when using this option. Downloading the
+data to perfom the search will take longer than requesting the IMAP
+server to perform the filtering, but the filtering will be done correctly.
+<P>
+</DD>
+
 
 <DT>Service</DT>
 <DD>This parameter requires an associated value.  The default value is
@@ -20424,6 +20779,47 @@ attempt to open a network connection used for monitoring for Unseen
 messages in Incoming Folders. The default is 5.
 If a connection has not completed within this many seconds Alpine will
 give up and consider it a failed connection.
+<P>
+<UL>   
+<LI><A HREF="h_finding_help">Finding more information and requesting help</A>
+</UL><P>
+&lt;End of help on this topic&gt;
+</BODY>
+</HTML>
+====== h_config_psleep ======
+<HTML>
+<HEAD>
+<TITLE>OPTION: <!--#echo var="VAR_mailcap-check-interval"--> (UNIX Alpine only)</TITLE>
+</HEAD>
+<BODY>
+<H1>OPTION: <!--#echo var="VAR_mailcap-check-interval"--> (UNIX Alpine only)</H1>
+
+<P>
+In the good old days a mailcap viewer was used to examine an 
+attachment before saving it, and after viewing the attachment control 
+would return to the operating system when the viewer was closed. Therefore, 
+when the mailcap viewer returned control to the operating system, it 
+could be assumed that the user who opened the attachment was done
+examining it, and the copy of the attachment that was used, could be removed.
+
+<P>
+However, today this assumption is not longer valid. Some viewers return 
+control to the operating system before they actually read the attachment
+to be examined. This causes Alpine to delete the attachment before it 
+is read by the viewer, causing the viewer to fail opening the attachment.
+
+<P>
+In order to work around this problem, Alpine checks, after the viewer has 
+returned control to the operating system, if there is any process that is 
+using the attachment. This variable controls the number of seconds that 
+must elapse between checks. Once it is found that no process is using the 
+attachment, this is removed.
+
+<P>
+The minimum value for this variable is 60 (checks will be made once per 
+minute), and the maximum value is 600 (checks will be made once every 10 
+minutes). The default value is 60.
+
 <P>
 <UL>   
 <LI><A HREF="h_finding_help">Finding more information and requesting help</A>
@@ -29111,11 +29507,11 @@ When this feature is set (the default) Alpine will select possible web hostnames
 from the displayed text and display them in boldface for selection.  
 This can be useful when you receive messages referencing World Wide Web 
 sites without the use of complete URLs; for example, specifying only 
-&quot;www.washington.edu/alpine/&quot; (which will <B>not</B> become a 
+&quot;www.patches.freeiz.com/alpine/&quot; (which will <B>not</B> become a 
 selectable 
 item by setting <A HREF="h_config_enable_view_url">&quot;<!--#echo var="FEAT_enable-msg-view-urls"-->&quot;</A>) 
 rather than explicitly
-&quot;http://www.washington.edu/alpine/&quot;.  
+&quot;http://www.patches.freeiz.com/alpine/&quot;.  
 <P>
 The first available hostname is displayed in inverse.  This is the
 &quot;selected&quot; hostname.  Pressing RETURN will cause Alpine to display
@@ -32335,6 +32731,29 @@ That is a separate and independent feature.
 &lt;End of help on this topic&gt;
 </BODY>
 </HTML>
+====== h_config_disable_password_file_saving =====
+<HTML>
+<HEAD>
+<TITLE>FEATURE: <!--#echo var="FEAT_disable-password-file-saving"--></TITLE>
+</HEAD>
+<BODY>
+<H1>FEATURE: <!--#echo var="FEAT_disable-password-file-saving"--></H1>
+
+This feature changes the behavior of Alpine when a login name and password combination
+for a specific server is not found in the password file. The default behavior is that
+Alpine will ask the user if they wish to save this information in the password file for future
+use. It is assumed that if a user created a password file it is because they intend
+to use it, but in some instances a user might want to save some passwords and not others.
+In this case, enabling this feature will make Alpine not add any more passwords to the
+password file and will only use the passwords that it already saved. If you wish to allow
+Alpine to save more passwords in the password file, disable this feature.
+<P>
+<UL>   
+<LI><A HREF="h_finding_help">Finding more information and requesting help</A>
+</UL><P>
+&lt;End of help on this topic&gt;
+</BODY>
+</HTML>
 ====== h_config_disable_kb_lock =====
 <HTML>
 <HEAD>
@@ -33829,8 +34248,6 @@ Some limitations:
    <LI> Because the implementation currently uses OpenSSL, there is only a very
 	limited integration with the Mac OS Keychain (the storing and access of
 	public certificates).
-   <LI> There is no way to view or manipulate the lists of certificates from
-	within Alpine.
 </UL>
 <P>
 The S/MIME configuration screen is reached by going to the Main Menu and typing
@@ -33933,17 +34350,40 @@ which gives you some information about the certificate used to sign or encrypt t
 
 <H2>MISCELLANEOUS</H2>
 
-You may have access to a private certificate in the PKCS12 format,
-which would sometimes be in a file with a &quot;.p12&quot; suffix.
-The UNIX shell command
-<P>
-<CENTER><SAMP>openssl pkcs12 -in file.p12 -out file.pem</SAMP></CENTER>
-<P>
-may work to convert that from the PKCS12 format to the PEM format.
-Then that file could be placed in the &quot;<SAMP>private</SAMP>&quot;
-directory with a filename of your email address followed by the
-suffix &quot;<SAMP>.key</SAMP>&quot;.
+If you have access to a private certificate in the PKCS12 format, which 
+would sometimes be in a file with a &quot;.p12&quot; extension, then you can 
+use the following commands to generate private keys, public and certificate
+authorities certificates. In the examples below, we assume that the 
+certificate in the p12 format is called &quot;certificate.p12&quot;, and 
+that your email address is &quot;your@address.com&quot;.
 
+<P>
+In order to create a private key use the command
+<P>
+<CENTER><SAMP>openssl pkcs12 -in certificate.p12 -out your@address.com.key</SAMP></CENTER>
+<P>
+In order to create a public certificate use the command
+<P>
+<CENTER><SAMP>
+openssl pkcs12 -in certificate.p12 -clcerts -nokeys -out your@address.com.crt
+</SAMP></CENTER>
+<P>
+In order to create a certificate authority certificate use the command
+<P>
+<CENTER><SAMP>
+openssl pkcs12 -in certificate.p12 -cacerts -nokeys -out certificate-ca.crt 
+</SAMP></CENTER>
+
+<P> If the previous command produces an empty file, it means that the 
+certificate authority was not included in the .p12 file, so you will have 
+to get it from some other sources. You will need these certificates, so 
+that you can validate correctly signatures.
+
+<P>
+After you have exported these certificates and keys, you can  use the import 
+command in Alpine, from the S/MIME configuration screen,
+to import these certificates into Alpine. They will be available for use
+as soon as you import them.
 <P>
 &lt;End of help on this topic&gt;
 </BODY>
@@ -34249,6 +34689,47 @@ Only the default value is affected.
 In any case, you may still toggle the Signing option on or off before sending
 with the &quot;G Sign&quot; command (provided you have a personal digital ID
 certificate).
+<P>
+<UL>   
+<LI><A HREF="h_mainhelp_smime">General S/MIME help</A>
+</UL><P>
+<P>
+
+<UL>   
+<LI><A HREF="h_finding_help">Finding more information and requesting help</A>
+</UL><P>
+&lt;End of help on this topic&gt;
+</BODY>
+</HTML>
+========== h_config_smime_use_cert_store ==========
+<HTML>
+<HEAD>
+<TITLE>S/MIME FEATURE: <!--#echo var="FEAT_smime-use-store-only"--></TITLE>
+</HEAD>
+<BODY>
+<H1>S/MIME FEATURE: <!--#echo var="FEAT_smime-use-store-only"--></H1>
+
+UNIX Alpine only.
+<P>
+This feature only has an effect if your version of Alpine includes
+support for S/MIME.
+It affects Alpine's behavior when you validate a message, and should
+not be disabled, unless you are performing a test.
+<P>
+There are two important aspects of validation: validation of the message
+(that is, the message was not modified after it was sent) 
+as well as validation of the identity of the sender. This option has to 
+do with the latter. 
+<P>
+In order to validate that the message came from the sender in the message
+and not an impersonator, Alpine can 
+either use the certificates that come in the message, or the ones that 
+you have personally stored. If this feature is enabled (the default) then 
+Alpine will use certificates that you have already saved in your store 
+and not those that come in the message to validate the sender of the 
+message. This behavior helps you prevent against impersonation, because 
+it is assumed that you trust the certificates that you have saved, and 
+might not trust those that came with the message that you are validating.
 <P>
 <UL>   
 <LI><A HREF="h_mainhelp_smime">General S/MIME help</A>
@@ -34581,6 +35062,296 @@ This might be useful if you decide to switch from using a cert container to usin
 the Keychain to store your public certs.
 <P>
 <UL>   
+<LI><A HREF="h_mainhelp_smime">General S/MIME help</A>
+</UL><P>
+<P>
+<UL>   
+<LI><A HREF="h_finding_help">Finding more information and requesting help</A>
+</UL><P>
+&lt;End of help on this topic&gt;
+</BODY>
+</HTML>
+====== h_config_smime_public_certificates =====
+<HTML>
+<HEAD>
+<TITLE>S/MIME: Manage Public Certificates</TITLE>
+</HEAD>
+<BODY>
+<H1>S/MIME: Manage Public Certificates</H1>
+
+UNIX Alpine only.
+<P>
+This menu item allows you to manage your public certificates, this
+may include your own public certificate, but it normally includes
+certificates of people you correspond with. These certificates are
+saved by Alpine automatically when they are found in signed messages
+that you receive. This interface allows you to manage them, by
+giving you the option to delete them, or trust them (in the case
+of self-signed certificates).
+
+<P>
+Please note that Alpine will not validate a message that was sent to you
+using a self-signed certificate, unless you decide to trust that certificate.
+Internally, a certificate is trusted by copying it to the
+<A HREF="h_config_smime_certificate_authorities">Certificate Authorities</A> 
+collection. If you decide that you want to stop trusting a self-signed
+certificate, you must delete such certificate from such collection.
+<P>
+The <B>I</B> Import command available in this screen allows you to 
+import a command to this collection.
+<P>
+<UL>   
+<LI><A HREF="h_mainhelp_smime">General S/MIME help</A>
+</UL><P>
+<P>
+<UL>   
+<LI><A HREF="h_finding_help">Finding more information and requesting help</A>
+</UL><P>
+&lt;End of help on this topic&gt;
+</BODY>
+</HTML>
+====== h_config_smime_private_keys =====
+<HTML>
+<HEAD>
+<TITLE>S/MIME: Manage Private Keys</TITLE>
+</HEAD>
+<BODY>
+<H1>S/MIME: Manage Private Keys</H1>
+
+UNIX Alpine only.
+<P>
+This option allows you to manage your private key. Normally a person has only
+one key, in the same way that a person only has one valid passport, or ID card,
+at any given time. This option allows you to manage private keys. You can
+delete them or import them. Additionally, you can view information
+about your public certificate, such as the issuer and the dates of validity
+of such certificate, among others.
+
+<P>
+If you have more than one e-mail address for which you want to use the 
+same private key, you must add all those addresses to the private key at 
+the moment that the key is generated. When you receive a signed message using 
+a key generated for several e-mail addresses, Alpine will save a 
+certificate for each e-mail address included in such certificate.
+<P>
+The <B>I</B> Import command available in this screen allows you to 
+import a command to this collection.
+<P>
+<UL>   
+<LI><A HREF="h_mainhelp_smime">General S/MIME help</A>
+</UL><P>
+<P>
+<UL>   
+<LI><A HREF="h_finding_help">Finding more information and requesting help</A>
+</UL><P>
+&lt;End of help on this topic&gt;
+</BODY>
+</HTML>
+====== h_config_smime_certificate_authorities =====
+<HTML>
+<HEAD>
+<TITLE>S/MIME: Manage Certificate Authorities</TITLE>
+</HEAD>
+<BODY>
+<H1>S/MIME: Manage Certificate Authorities</H1>
+
+UNIX Alpine only.
+<P>
+This collection contains certificates that are needed to validate the 
+certificate of another person, and therefore contains certificates that 
+you trust. Typically a certificate is signed by another entity, called a 
+certificate authority. This option allows you to manage which certificates 
+you trust, allowing you to import them and to delete them or view information
+about each certificate, such as the issuer and the dates of validity
+of such certificate.
+<P>
+The <B>I</B> Import command available in this screen allows you to 
+import a command to this collection.
+<P>
+<UL>   
+<LI><A HREF="h_mainhelp_smime">General S/MIME help</A>
+</UL><P>
+<P>
+<UL>   
+<LI><A HREF="h_finding_help">Finding more information and requesting help</A>
+</UL><P>
+&lt;End of help on this topic&gt;
+</BODY>
+</HTML>
+====== h_certificate_information =====
+<HTML>
+<HEAD>
+<TITLE>S/MIME: Certificate Information Screen</TITLE>
+</HEAD>
+<BODY>
+<H1>S/MIME: Certificate Information Screen</H1>
+
+UNIX Alpine only.
+<P>
+The CERTIFICATE INFORMATION screen shows you information contained in a certificate
+such as its owner, e-mail address, issuer, and interval of validity, 
+among others.
+<P>
+In the case of public certificates, this screen shows you if there was a
+failure when attempting to validate such message. If the certificate is
+self-signed, then the <B>T</B> Trust command will be available, which
+you can use to trust such certificate and make Alpine not fail validating 
+signatures signed with such certificate.
+<P>
+You can also mark a certificate deleted, with the <B>D</B> command, or 
+remove the deleted mark with the <B>U</B> undelete command.
+<P>
+In the case of your private key, Alpine shows you the information
+from your public key. Additionally, Alpine allows you to see public
+and private information about your key, with the <B>B</B> and
+<B>R</B> commands respectively.
+<UL>   
+<LI><A HREF="h_mainhelp_smime">General S/MIME help</A>
+</UL><P>
+<P>
+<UL>   
+<LI><A HREF="h_finding_help">Finding more information and requesting help</A>
+</UL><P>
+&lt;End of help on this topic&gt;
+</BODY>
+</HTML>
+====== h_config_smime_manage_public_menu =====
+<HTML>
+<HEAD>
+<TITLE>S/MIME: Menu of Commands to Manage Public Certificates</TITLE>
+</HEAD>
+<BODY>
+<H1>S/MIME: Commands that Manage Public Certificates</H1>
+
+UNIX Alpine only.
+<P>
+This screen allows you to manage your public certificates. 
+<P>
+The format of this screen is as follows. There are five fields: The 
+leftmost field is normally empty, but it could contain the letter 
+&quot;D&quot; to indicate that that certificate has been marked for 
+deletion. The next field is the e-mail address of the owner of the 
+certificate, shown in its entirety. The third and fourth field are the 
+first and last day validity for that certificate, respectively. The date
+is displayed in the user's locale unless the option 
+<A HREF="h_config_disable_index_locale_dates"><!--#echo var="FEAT_disable-index-locale-dates"--></A>
+is set. In this case, the month, day and year are represented by two
+digits, and the format used is mm/dd/yy. Finally, the fifth 
+field is what can be displayed of the MD5 hash of the certificate. You can 
+use any of the last three fields to distinguish between two certificates 
+for the same owner.
+<P>
+Available commands in this screen and a short description of what they 
+do follows.
+<UL>
+<LI> <B>I</B> Imports a public certificate to this collection.
+<LI> <B>V</B> View information about a certificate such as the name of the person the
+certificate was issued to, its dates of validity, and validity status.
+<LI> <B>D</B> Marks a certificate deleted.
+<LI> <B>U</B> Removes the deletion mark on a certificate.
+<LI> <B>X</B> Removes all certificates marked deleted permanently (cannot be undone).
+<LI> <B>T</B> This command is only available for self-signed certificates, and allows you to
+trust a certificate by copying it to the collection of trusted certificates.
+</UL>
+<P>
+All commands provide feedback to let you know about their success or failure.
+<P>
+<UL>   
+<LI><A HREF="h_mainhelp_smime">General S/MIME help</A>
+</UL><P>
+<P>
+<UL>   
+<LI><A HREF="h_finding_help">Finding more information and requesting help</A>
+</UL><P>
+&lt;End of help on this topic&gt;
+</BODY>
+</HTML>
+====== h_config_smime_manage_private_menu =====
+<HTML>
+<HEAD>
+<TITLE>S/MIME: Menu of Commands to Manage Private Keys</TITLE>
+</HEAD>
+<BODY>
+<H1>S/MIME: Commands that Manage Private Keys</H1>
+
+UNIX Alpine only.
+<P>
+This screen allows you to manage your private key.
+<P>
+The format of this screen is as follows. There are five fields: The 
+leftmost field is normally empty, but it could contain the letter 
+&quot;D&quot; to indicate that that certificate has been marked for 
+deletion. The next field is the e-mail address of the owner of the 
+certificate, shown in its entirety. The third field is the first day of 
+validity for that certificate; the fourth field in the last day that that 
+certificate is valid, and the fifth field is what can be displayed of the 
+MD5 hash of the public certificate corresponding to this private key. You 
+can use any of the last three fields to distinguish between two 
+certificates for the same owner.
+<P>
+Available commands and a short description of what they do follows.
+<UL>
+<LI> <B>I</B> Imports a new public key to this collection.
+<LI> <B>V</B> View information about the public certificate corresponding to this
+key.
+<LI> <B>D</B> Marks a key to be deleted.
+<LI> <B>U</B> Removes the deletion mark on a key.
+<LI> <B>X</B> Removes all keys marked deleted permanently (cannot be undone).
+Note that expunging a private key does not remove the public key, which must
+be removed separately.
+</UL>
+<P>
+All commands provide feedback to let you know about their success or failure.
+<P>
+<UL>   
+<LI><A HREF="h_mainhelp_smime">General S/MIME help</A>
+</UL><P>
+<P>
+<UL>   
+<LI><A HREF="h_finding_help">Finding more information and requesting help</A>
+</UL><P>
+&lt;End of help on this topic&gt;
+</BODY>
+</HTML>
+====== h_config_smime_manage_cacerts_menu =====
+<HTML>
+<HEAD>
+<TITLE>S/MIME: Menu of Commands to Manage Certificate Authorities</TITLE>
+</HEAD>
+<BODY>
+<H1>S/MIME: Commands that Manage Certificate Authorities</H1>
+
+UNIX Alpine only.
+<P>
+This screen allows you to manage your collection of certificates that you
+trust. 
+<P>
+The format of this screen is as follows. There are five fields: The 
+leftmost field is normally empty, but it could contain the letter 
+&quot;D&quot; to indicate that that certificate has been marked for 
+deletion. The next field is the e-mail address of the owner of the 
+certificate, shown in its entirety. The third field is the first day of 
+validity for that certificate; the fourth field in the last day that that 
+certificate is valid, and the fifth field is what can be displayed of the 
+MD5 hash of the certificate. You can use any of the last three fields to 
+distinguish between two certificates for the same owner.
+<P>
+Available commands and a short description of what they do follows.
+<UL>
+<LI> <B>I</B> Imports a trusted certificate to this collection. This is
+done by reading the certificate and validating it. Once a certificate
+is found to be valid, it is saved, adding the extension &quot;.crt&quot;
+to the certificate, if necessary.
+<LI> <B>V</B> View information about this certificate, such as its issuer 
+and validity dates.
+<LI> <B>D</B> Marks a certificate to be deleted.
+<LI> <B>U</B> Removes the deletion mark on a certificate.
+<LI> <B>X</B> Removes all certificates marked deleted permanently (cannot be undone).
+</UL>
+<P>
+All commands provide feedback to let you know about their success or failure.
+<P>
+<UL>
 <LI><A HREF="h_mainhelp_smime">General S/MIME help</A>
 </UL><P>
 <P>

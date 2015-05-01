@@ -1,4 +1,18 @@
 /* ========================================================================
+ * Copyright 2008-2010 Mark Crispin
+ * ========================================================================
+ */
+
+/*
+ * Program:	Mailbox Access routines
+ *
+ * Author:	Mark Crispin
+ *
+ * Date:	22 November 1989
+ * Last Edited:	15 November 2010
+ *
+ * Previous versions of this file were
+*
  * Copyright 1988-2008 University of Washington
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -7,21 +21,6 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * 
- * ========================================================================
- */
-
-/*
- * Program:	Mailbox Access routines
- *
- * Author:	Mark Crispin
- *		UW Technology
- *		University of Washington
- *		Seattle, WA  98195
- *		Internet: MRC@Washington.EDU
- *
- * Date:	22 November 1989
- * Last Edited:	15 April 2008
  */
 
 
@@ -30,7 +29,9 @@
 #include <time.h>
 #include "c-client.h"
 
-char *UW_copyright = "Copyright 1988-2007 University of Washington\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n     http://www.apache.org/licenses/LICENSE-2.0\n";
+char *Panda_copyright = "Copyright 2008-2010 Mark Crispin\n";
+
+char *UW_copyright = "Copyright 1988-2008 University of Washington\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n     http://www.apache.org/licenses/LICENSE-2.0\n";
 
 /* c-client global data */
 
@@ -349,6 +350,11 @@ void *mail_parameters (MAILSTREAM *stream,long function,void *value)
     else ret = env_parameters (function,value);
     break;
   case GET_NAMESPACE:
+    ret = (stream && stream->dtb && !(stream->dtb->flags & DR_LOCAL)) ?
+				/* KLUDGE ALERT: note stream passed as value */
+      (*stream->dtb->parameters) (function,stream) :
+	env_parameters (function,value);
+    break;
   case GET_NEWSRC:		/* use stream dtb instead of environment */
     ret = (stream && stream->dtb) ?
 				/* KLUDGE ALERT: note stream passed as value */
@@ -814,6 +820,20 @@ long mail_valid_net_parse_work (char *name,NETMBX *mb,char *service)
 	  mb->trysslflag = mailssldriver? T : NIL;
 	else if (mailssldriver && !compare_cstring (s,"ssl") && !mb->tlsflag)
 	  mb->sslflag = mb->notlsflag = T;
+	else if (!compare_cstring(s, "tls1") 
+			&& !mb->tls1_1 && !mb->tls1_2 && !mb->dtls1)
+	  mb->sslflag = mb->notlsflag = mb->tls1 = T;
+#ifdef TLSV1_2
+	else if (!compare_cstring(s, "tls1_1") 
+			&& !mb->tls1 && !mb->tls1_2 && !mb->dtls1)
+	  mb->sslflag = mb->notlsflag = mb->tls1_1 = T;
+	else if (!compare_cstring(s, "tls1_2") 
+			&& !mb->tls1 && !mb->tls1_1 && !mb->dtls1)
+	  mb->sslflag = mb->notlsflag = mb->tls1_2 = T;
+#endif
+	else if (!compare_cstring(s, "dtls1")
+			&& !mb->tls1 && !mb->tls1_1 && !mb->tls1_2)
+	  mb->sslflag = mb->notlsflag = mb->dtls1 = T;
 	else if (mailssldriver && !compare_cstring (s,"novalidate-cert"))
 	  mb->novalidate = T;
 				/* hack for compatibility with the past */
@@ -1222,6 +1242,10 @@ MAILSTREAM *mail_open (MAILSTREAM *stream,char *name,long options)
 	if (mb.tlsflag) strcat (tmp,"/tls");
 	if (mb.notlsflag) strcat (tmp,"/notls");
 	if (mb.sslflag) strcat (tmp,"/ssl");
+	if (mb.tls1) strcat (tmp,"/tls1");
+	if (mb.tls1_1) strcat (tmp,"/tls1_1");
+	if (mb.tls1_2) strcat (tmp,"/tls1_2");
+	if (mb.dtls1) strcat (tmp,"/dtls1");
 	if (mb.trysslflag) strcat (tmp,"/tryssl");
 	if (mb.novalidate) strcat (tmp,"/novalidate-cert");
 	strcat (tmp,"/pop3/loser}");
@@ -2699,21 +2723,18 @@ void mail_gc_body (BODY *body)
   if (body->mime.text.data) fs_give ((void **) &body->mime.text.data);
   if (body->contents.text.data) fs_give ((void **) &body->contents.text.data);
 }
-
-/* Mail get body part
- * Accepts: mail stream
- *	    message number
- *	    section specifier
- * Returns: pointer to body
+/* Mail get body section
+ * Accepts: body of message
+ *          section specifier
+ * Returns: pointer to body at given section
  */
 
-BODY *mail_body (MAILSTREAM *stream,unsigned long msgno,unsigned char *section)
+BODY *mail_body_section (BODY *b, unsigned char *section)
 {
-  BODY *b = NIL;
   PART *pt;
   unsigned long i;
 				/* make sure have a body */
-  if (section && *section && mail_fetchstructure (stream,msgno,&b) && b)
+  if (section && *section && b)
     while (*section) {		/* find desired section */
       if (isdigit (*section)) {	/* get section specifier */
 				/* make sure what follows is valid */
@@ -2743,6 +2764,24 @@ BODY *mail_body (MAILSTREAM *stream,unsigned long msgno,unsigned char *section)
       }
       else return NIL;		/* unknown section specifier */
     }
+  return b;
+}
+
+/* Mail get body part
+ * Accepts: mail stream
+ *	    message number
+ *	    section specifier
+ * Returns: pointer to body
+ */
+
+BODY *mail_body (MAILSTREAM *stream,unsigned long msgno,unsigned char *section)
+{
+  BODY *b = NIL;
+  PART *pt;
+  unsigned long i;
+				/* make sure have a body */
+  if (section && *section && mail_fetchstructure (stream,msgno,&b) && b)
+    return mail_body_section(b, section);
   return b;
 }  
 
@@ -3377,12 +3416,14 @@ unsigned long mail_filter (char *text,unsigned long len,STRINGLIST *lines,
       while (((*src++ != '\012') && (*src++ != '\012') && (*src++ != '\012') &&
 	      (*src++ != '\012') && (*src++ != '\012') && (*src++ != '\012') &&
 	      (*src++ != '\012') && (*src++ != '\012') && (*src++ != '\012') &&
-	      (*src++ != '\012')) || ((*src == ' ') || (*src == '\t')));
+	      (*src++ != '\012')) ||
+	     ((src < end) && ((*src == ' ') || (*src == '\t'))));
     else if (src == dst) {	/* copy to self */
       while (((*src++ != '\012') && (*src++ != '\012') && (*src++ != '\012') &&
 	      (*src++ != '\012') && (*src++ != '\012') && (*src++ != '\012') &&
 	      (*src++ != '\012') && (*src++ != '\012') && (*src++ != '\012') &&
-	      (*src++ != '\012')) || ((*src == ' ') || (*src == '\t')));
+	      (*src++ != '\012')) ||
+	     ((src < end) && ((*src == ' ') || (*src == '\t'))));
       dst = src;		/* update destination */
     }
     else {			/* copy line and any continuation line */
@@ -3391,7 +3432,7 @@ unsigned long mail_filter (char *text,unsigned long len,STRINGLIST *lines,
 	      ((*dst++ = *src++) != '\012') && ((*dst++ = *src++) != '\012') &&
 	      ((*dst++ = *src++) != '\012') && ((*dst++ = *src++) != '\012') &&
 	      ((*dst++ = *src++) != '\012') && ((*dst++ = *src++) != '\012'))||
-	     ((*src == ' ') || (*src == '\t')));
+	     ((src < end) && ((*src == ' ') || (*src == '\t'))));
 				/* in case hit the guard LF */
       if (src > end) dst -= (src - end);
     }
@@ -4384,7 +4425,8 @@ SORTCACHE **mail_sort_loadcache (MAILSTREAM *stream,SORTPGM *pgm)
 	      default:		/* tie off extraneous text */
 		*x = x[1] = '\0';
 	      }
-	    if (adr = rfc822_parse_address (&adr,adr,&t,BADHOST,0)) {
+	    rfc822_parse_adrlist (&adr,t,BADHOST);
+	    if (adr) {
 	      s->from = adr->mailbox;
 	      adr->mailbox = NIL;
 	      mail_free_address (&adr);
@@ -4417,7 +4459,8 @@ SORTCACHE **mail_sort_loadcache (MAILSTREAM *stream,SORTPGM *pgm)
 	      default:		/* tie off extraneous text */
 		*x = x[1] = '\0';
 	      }
-	    if (adr = rfc822_parse_address (&adr,adr,&t,BADHOST,0)) {
+	    rfc822_parse_adrlist (&adr,t,BADHOST);
+	    if (adr) {
 	      s->to = adr->mailbox;
 	      adr->mailbox = NIL;
 	      mail_free_address (&adr);
@@ -4441,8 +4484,8 @@ SORTCACHE **mail_sort_loadcache (MAILSTREAM *stream,SORTPGM *pgm)
 	      case '\t':
 		memmove (x,v,strlen (v));
 		break;
-	      case 't':		/* continuation but with extra "To:" */
-	      case 'T':
+	      case 'c':		/* continuation but with extra "cc:" */
+	      case 'C':
 		if (v = strchr (v,':')) {
 		  memmove (x,v+1,strlen (v+1));
 		  break;
@@ -4450,7 +4493,8 @@ SORTCACHE **mail_sort_loadcache (MAILSTREAM *stream,SORTPGM *pgm)
 	      default:		/* tie off extraneous text */
 		*x = x[1] = '\0';
 	      }
-	    if (adr = rfc822_parse_address (&adr,adr,&t,BADHOST,0)) {
+	    rfc822_parse_adrlist (&adr,t,BADHOST);
+	    if (adr) {
 	      s->cc = adr->mailbox;
 	      adr->mailbox = NIL;
 	      mail_free_address (&adr);
@@ -4645,16 +4689,16 @@ int mail_sort_compare (const void *a1,const void *a2)
       i = compare_ulong (s1->size,s2->size);
       break;
     case SORTFROM:		/* sort by first from */
-      i = compare_cstring (s1->from,s2->from);
+      i = compare_string (s1->from,s2->from);
       break;
     case SORTTO:		/* sort by first to */
-      i = compare_cstring (s1->to,s2->to);
+      i = compare_string (s1->to,s2->to);
       break;
     case SORTCC:		/* sort by first cc */
-      i = compare_cstring (s1->cc,s2->cc);
+      i = compare_string (s1->cc,s2->cc);
       break;
     case SORTSUBJECT:		/* sort by subject */
-      i = compare_cstring (s1->subject,s2->subject);
+      i = compare_string (s1->subject,s2->subject);
       break;
     }
     if (pgm->reverse) i = -i;	/* flip results if necessary */
@@ -5504,21 +5548,24 @@ long mail_parse_flags (MAILSTREAM *stream,char *flag,unsigned long *uf)
 long mail_usable_network_stream (MAILSTREAM *stream,char *name)
 {
   NETMBX smb,nmb,omb;
-  return (stream && stream->dtb && !(stream->dtb->flags & DR_LOCAL) &&
-	  mail_valid_net_parse (name,&nmb) &&
-	  mail_valid_net_parse (stream->mailbox,&smb) &&
-	  mail_valid_net_parse (stream->original_mailbox,&omb) &&
-	  ((!compare_cstring (smb.host,
-			      trustdns ? tcp_canonical (nmb.host) : nmb.host)&&
-	    !strcmp (smb.service,nmb.service) &&
-	    (!nmb.port || (smb.port == nmb.port)) &&
-	    (nmb.anoflag == stream->anonymous) &&
-	    (!nmb.user[0] || !strcmp (smb.user,nmb.user))) ||
-	   (!compare_cstring (omb.host,nmb.host) &&
-	    !strcmp (omb.service,nmb.service) &&
-	    (!nmb.port || (omb.port == nmb.port)) &&
-	    (nmb.anoflag == stream->anonymous) &&
-	    (!nmb.user[0] || !strcmp (omb.user,nmb.user))))) ? LONGT : NIL;
+  char *s = NIL;
+  long ret= (stream && stream->dtb && !(stream->dtb->flags & DR_LOCAL) &&
+	     mail_valid_net_parse (name,&nmb) &&
+	     mail_valid_net_parse (stream->mailbox,&smb) &&
+	     mail_valid_net_parse (stream->original_mailbox,&omb) &&
+	     ((!compare_cstring (smb.host,trustdns ?
+				 (s = tcp_canonical (nmb.host)) : nmb.host) &&
+	       !strcmp (smb.service,nmb.service) &&
+	       (!nmb.port || (smb.port == nmb.port)) &&
+	       (nmb.anoflag == stream->anonymous) &&
+	       (!nmb.user[0] || !strcmp (smb.user,nmb.user))) ||
+	      (!compare_cstring (omb.host,nmb.host) &&
+	       !strcmp (omb.service,nmb.service) &&
+	       (!nmb.port || (omb.port == nmb.port)) &&
+	       (nmb.anoflag == stream->anonymous) &&
+	       (!nmb.user[0] || !strcmp (omb.user,nmb.user))))) ? LONGT : NIL;
+  if(s) fs_give((void **) &s);
+  return ret;
 }
 
 /* Mail data structure instantiation routines */
@@ -6155,6 +6202,10 @@ NETSTREAM *net_open (NETMBX *mb,NETDRIVER *dv,unsigned long port,
   NETSTREAM *stream = NIL;
   char tmp[MAILTMPLEN];
   unsigned long flags = mb->novalidate ? NET_NOVALIDATECERT : 0;
+  flags |= mb->tls1 || mb->tlsflag ? NET_TRYTLS1   : 0;
+  flags |= mb->tls1_1 ? NET_TRYTLS1_1 : 0;
+  flags |= mb->tls1_2 ? NET_TRYTLS1_2 : 0;
+  flags |= mb->dtls1  ? NET_TRYDTLS1  : 0;
   if (strlen (mb->host) >= NETMAXHOST) {
     sprintf (tmp,"Invalid host name: %.80s",mb->host);
     MM_LOG (tmp,ERROR);

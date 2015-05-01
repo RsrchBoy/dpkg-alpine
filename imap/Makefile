@@ -1,4 +1,17 @@
 # ========================================================================
+# Copyright 2008-2011 Mark Crispin
+# ========================================================================
+#
+
+# Program:	IMAP Toolkit Makefile
+#
+# Author:	Mark Crispin
+#
+# Date:		7 December 1989
+# Last Edited:	15 April 2013 (jonabbey@arlut.utexas.edu)
+#
+# Previous versions of this file were
+#
 # Copyright 1988-2008 University of Washington
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -6,19 +19,6 @@
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# 
-# ========================================================================
-
-# Program:	IMAP Toolkit Makefile
-#
-# Author:	Mark Crispin
-#		UW Technology
-#		Seattle, WA  98195
-#		Internet: MRC@Washington.EDU
-#
-# Date:		7 December 1989
-# Last Edited:	12 May 2008
 
 
 # Normal command to build IMAP toolkit:
@@ -37,7 +37,7 @@
 # The following ports are bundled:
 # a32	AIX 3.2 for RS/6000
 # a41	AIX 4.1 for RS/6000
-# a52	Attempt at AIX 5.2
+# a52	AIX 5.2
 # aix	AIX/370 (not RS/6000!!)
 # ami	AmigaDOS
 # am2	AmigaDOS with a 68020+
@@ -79,13 +79,13 @@
 # hxd	HP-UX 10.x with DCE security (see shp)
 # isc	Interactive Systems
 # ldb	Debian Linux
-# lfd	Fedora Core 4
+# lfd	Fedora Linux
 # ln8	Linux for Nokia N800
 # lnx	Linux with traditional passwords and crypt() in the C library
 #	 (see lnp, sl4, sl5, and slx)
 # lnp	Linux with Pluggable Authentication Modules (PAM)
 # lmd	Mandrake Linux
-# lr5	RedHat Enterprise 5 and later (same as lfd)
+# lr5	RedHat Enterprise Linux 5 and later (same as lfd)
 # lrh	RedHat Linux 7.2 and later
 # lsu	SuSE Linux (same as lrh)
 # lyn	LynxOS
@@ -93,7 +93,7 @@
 # mnt	Atari ST Mint (not MacMint)
 # neb	NetBSD
 # nec	NEC UX
-# nto	QNX Neutrine RTP
+# nto	QNX Neutrino RTP
 # nxt	NEXTSTEP
 # nx3	NEXTSTEP 3.x
 # osf	OSF/1 (see sos, os4)
@@ -101,10 +101,11 @@
 # osi	Apple iPhone and iPod Touch
 # osx	Mac OS X
 # oxp	Mac OS X with Pluggable Authentication Modules (PAM)
-# osx	Mac OS X Snow Leopard
+# oxs	Mac OS X Snow Leopard
 # ptx	PTX
 # pyr	Pyramid
 # qnx	QNX 4
+# qn6	QNX 6
 # s40	SUN-OS 4.0 (*not* Solaris)
 # sc5	SCO Open Server 5.0.x (see go5)
 # sco	Santa Cruz Operation (see sc5, go5)
@@ -187,7 +188,6 @@ SSLTYPE=nopwd
 # IP protocol version
 #
 # The following IP protocol versions are defined:
-# o	IPv4 support, no DNS (truly ancient systems)
 # 4	(default) IPv4 support only
 # 6	IPv6 and IPv4 support
 
@@ -308,7 +308,7 @@ SPECIALS:
 
 # Note on SCO you may have to set LN to "ln".
 
-a32 a41 a52 aix bs3 bsi d-g d54 do4 drs epx ga4 gas gh9 ghp ghs go5 gsc gsg gso gul h11 hpp hpx lnp lyn mct mnt nec nto nxt nx3 osf os4 ptx qnx sc5 sco sgi sg6 shp sl4 sl5 slx snx soc sol sos uw2: an
+a32 a41 a52 aix bs3 bsi d-g d54 do4 drs epx ga4 gas gh9 ghp ghs go5 gsc gsg gso gul h11 hpp hpx lnp lyn mct mnt nec nto nxt nx3 osf os4 ptx qnx qn6 sc5 sco sgi sg6 shp sl4 sl5 slx snx soc sol sos uw2: an
 	$(BUILD) BUILDTYPE=$@
 
 # If you use sv4, you may find that it works to move it to use the an process.
@@ -327,14 +327,14 @@ bsf:	an
 	$(TOUCH) ip6
 	$(BUILD) BUILDTYPE=$@ IP=$(IP6) \
 	PASSWDTYPE=pam \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/etc/ssl/certs SSLKEYS=/etc/ssl/private GSSINCLUDE=/usr/include GSSLIB=/usr/lib PAMLDFLAGS=-lpam"
+	SPECIALS="GSSINCLUDE=/usr/include GSSLIB=/usr/lib PAMLDFLAGS=-lpam"
 
 # I assume that Theo did the right thing for IPv6.  OpenBSD does not have PAM.
 
 bso:	an
 	$(TOUCH) ip6
 	$(BUILD) BUILDTYPE=$@ IP=$(IP6) \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/etc/ssl SSLKEYS=/etc/ssl/private GSSINCLUDE=/usr/include GSSLIB=/usr/lib"
+	SPECIALS="GSSINCLUDE=/usr/include GSSLIB=/usr/lib"
 
 # Info from Joel Reicher about NetBSD SSL paths.  I assume it has PAM because pam is in NetBSD sources...
 
@@ -342,11 +342,10 @@ neb:	an
 	$(TOUCH) ip6
 	$(BUILD) BUILDTYPE=$@ IP=$(IP6) \
 	PASSWDTYPE=pam \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/etc/openssl/certs SSLKEYS=/etc/openssl/private GSSINCLUDE=/usr/include GSSLIB=/usr/lib PAMLDFLAGS=-lpam"
+	SPECIALS="GSSINCLUDE=/usr/include GSSLIB=/usr/lib PAMLDFLAGS=-lpam"
 
 cyg:	an
 	$(BUILD) BUILDTYPE=cyg \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/usr/ssl/certs SSLKEYS=/usr/ssl/certs"
 
 gcs:	an
 	$(BUILD) BUILDTYPE=gso \
@@ -354,34 +353,34 @@ gcs:	an
 
 ldb:	an
 	$(BUILD) BUILDTYPE=lnp IP=$(IP6) \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/etc/ssl/certs SSLKEYS=/etc/ssl/private GSSINCLUDE=/usr/include GSSLIB=/usr/lib MAILSPOOL=/var/mail"
+	SPECIALS="GSSINCLUDE=/usr/include GSSLIB=/usr/lib MAILSPOOL=/var/mail"
 
 lfd:	an
 	$(BUILD) BUILDTYPE=lnp IP=$(IP6) \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/etc/pki/tls/certs SSLKEYS=/etc/pki/tls/private GSSDIR=/usr/kerberos"
+	SPECIALS="GSSDIR=/usr/kerberos"
 
 ln8:	an
 	$(TOUCH) ip6
 	$(BUILD) BUILDTYPE=slx IP=$(IP6) \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/usr/lib/ssl/certs MAILSPOOL=/var/mail"
+	SPECIALS="MAILSPOOL=/var/mail"
 
 
-# RHE5 does not have the IPv6 bug
+# RHEL5/6 does not have the IPv6 bug
 
 lr5:	an
 	$(TOUCH) ip6
 	$(BUILD) BUILDTYPE=lnp IP=$(IP6) \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/etc/pki/tls/certs SSLKEYS=/etc/pki/tls/private GSSDIR=/usr/kerberos"
+	SPECIALS="GSSDIR=/usr/kerberos"
 
 lmd:	an
 	$(BUILD) BUILDTYPE=lnp IP=$(IP6) \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/usr/lib/ssl/certs SSLKEYS=/usr/lib/ssl/private GSSINCLUDE=/usr/include GSSLIB=/usr/lib"
+	SPECIALS="GSSINCLUDE=/usr/include GSSLIB=/usr/lib"
 
-# RHE3 definitely has the IPv6 bug
+# RHEL3 definitely has the IPv6 bug
 
 lrh:	lrhok an
 	$(BUILD) BUILDTYPE=lnp IP=$(IP6) \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/usr/share/ssl/certs SSLKEYS=/usr/share/ssl/private GSSDIR=/usr/kerberos"
+	SPECIALS="GSSDIR=/usr/kerberos"
 
 lrhok:
 	@$(SH) -c '(test ! -d /etc/pki/tls ) || make lrhwarn'
@@ -389,7 +388,7 @@ lrhok:
 
 lrhwarn:
 	@echo You are building for OLD versions of RedHat Linux.  This build
-	@echo is NOT suitable for RedHat Enterprise 5, which stores SSL/TLS
+	@echo is NOT suitable for RedHat Enterprise 5 / 6, which store SSL/TLS
 	@echo certificates and keys in /etc/pki/tls rather than /usr/share/ssl.
 	@echo If you want to build for modern RedHat Linux, you should use
 	@echo make lr5 instead.
@@ -405,7 +404,7 @@ lrhwarn:
 
 lsu:	an
 	$(BUILD) BUILDTYPE=lnp IP=$(IP6) \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/usr/share/ssl/certs SSLKEYS=/usr/share/ssl/private GSSDIR=/usr/kerberos"
+	SPECIALS="GSSDIR=/usr/kerberos"
 
 # iToy does not have Kerberos or PAM.  It doesn't have a
 # /System/Library/OpenSSL directory either, but the libcrypto shared library
@@ -414,25 +413,26 @@ lsu:	an
 osi:	an
 	$(TOUCH) ip6
 	$(BUILD) BUILDTYPE=osx IP=$(IP6) CC=arm-apple-darwin-gcc \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/System/Library/OpenSSL/certs SSLKEYS=/System/Library/OpenSSL/private"
+	EXTRACFLAGS="$(EXTRACFLAGS) -DMAC_OSX_KLUDGE=1 -Dhash_create=Hash_create -Dhash_destroy=Hash_destroy -Dlogout=Logout" \
 
 oxp:	an
 	$(TOUCH) ip6
 	$(BUILD) BUILDTYPE=osx IP=$(IP6) EXTRAAUTHENTICATORS="$(EXTRAAUTHENTICATORS) gss" \
 	PASSWDTYPE=pam \
 	EXTRACFLAGS="$(EXTRACFLAGS) -DMAC_OSX_KLUDGE=1" \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/System/Library/OpenSSL/certs SSLKEYS=/System/Library/OpenSSL/private GSSINCLUDE=/usr/include GSSLIB=/usr/lib PAMDLFLAGS=-lpam"
+	SPECIALS="GSSINCLUDE=/usr/include GSSLIB=/usr/lib PAMDLFLAGS=-lpam"
 
 oxs:	an
 	$(TOUCH) ip6
 	$(BUILD) BUILDTYPE=osx IP=$(IP6) EXTRAAUTHENTICATORS="$(EXTRAAUTHENTICATORS) gss" \
 	PASSWDTYPE=pam \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/System/Library/OpenSSL/certs SSLKEYS=/System/Library/OpenSSL/private GSSINCLUDE=/usr/include GSSLIB=/usr/lib PAMDLFLAGS=-lpam"
+	EXTRACFLAGS="$(EXTRACFLAGS)" \
+	SPECIALS="GSSINCLUDE=/usr/include GSSLIB=/usr/lib PAMDLFLAGS=-lpam"
 
 osx:	osxok an
 	$(TOUCH) ip6
 	$(BUILD) BUILDTYPE=$@ IP=$(IP6) EXTRAAUTHENTICATORS="$(EXTRAAUTHENTICATORS) gss" \
-	SPECIALS="SSLINCLUDE=/usr/include/openssl SSLLIB=/usr/lib SSLCERTS=/System/Library/OpenSSL/certs SSLKEYS=/System/Library/OpenSSL/private GSSINCLUDE=/usr/include GSSLIB=/usr/lib"
+	SPECIALS="GSSINCLUDE=/usr/include GSSLIB=/usr/lib"
 
 osxok:
 	@$(SH) -c '(test ! -f /usr/include/pam/pam_appl.h ) || make osxwarn'
@@ -735,7 +735,7 @@ sysexitwarn:
 
 clean:
 	@echo Removing old processed sources and binaries...
-	$(SH) -c '$(RM) an ua OSTYPE SPECIALS c-client mtest imapd ipopd mailutil mlock dmail tmail || true'
+	$(SH) -c '$(RM) an ua OSTYPE SPECIALS c-client mtest imapd ipopd mailutil mlock dmail tmail ip6 || true'
 	$(CD) tools;$(MAKE) clean
 
 

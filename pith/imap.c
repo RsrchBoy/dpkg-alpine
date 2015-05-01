@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: imap.c 1142 2008-08-13 17:22:21Z hubert@u.washington
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -206,7 +206,7 @@ necessary.
 void
 mm_expunged(MAILSTREAM *stream, long unsigned int rawno)
 {
-    MESSAGECACHE *mc;
+    MESSAGECACHE *mc = NULL;
     long          i;
     int           is_current = 0;
     MSGNO_S      *msgmap;
@@ -643,7 +643,7 @@ mm_nocritical(MAILSTREAM *stream)
 void
 mm_fatal(char *message)
 {
-    panic(message);
+    alpine_panic(message);
 }
 
 

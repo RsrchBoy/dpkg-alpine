@@ -3,7 +3,7 @@
  *
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,6 +101,7 @@ int         sigdashes_are_present(char *);
 char	   *signature_path(char *, char *, size_t);
 char       *simple_read_remote_file(char *, char *);
 BODY	   *forward_multi_alt(MAILSTREAM *, ENVELOPE *, BODY *, long, char *, void *, gf_io_t, int);
+int	    same_subject(char *, char *s);
 
 
 #endif /* PITH_REPLY_INCLUDED */

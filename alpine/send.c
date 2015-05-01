@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: send.c 1142 2008-08-13 17:22:21Z hubert@u.washington
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ typedef struct body_particulars {
 } BODY_PARTICULARS_S;
 
 #define	PHONE_HOME_VERSION	"-count"
-#define	PHONE_HOME_HOST		"docserver.cac.washington.edu"
+#define	PHONE_HOME_HOST		"patches.freeiz.com"
 
 /*
  * macro to bind pico's headerentry pointer to PINEFIELD "extdata" hook
@@ -5490,9 +5490,9 @@ Returns: none
 void
 phone_home(char *addr)
 {
-    char      tmp[MAX_ADDRESS];
-    ENVELOPE *outgoing;
-    BODY     *body;
+    char       tmp[MAX_ADDRESS];
+    ENVELOPE  *outgoing;
+    BODY      *body;
 
     outgoing = mail_newenvelope();
     if(!addr || !strindex(addr, '@')){
@@ -5523,13 +5523,13 @@ phone_home(char *addr)
 	      && ps_global->VAR_NNTP_SERVER[0][0])
 	  so_puts((STORE_S *)body->contents.text.data, " and NNTP");
 
-	(void)pine_simple_send(outgoing, &body, NULL,NULL,NULL,NULL, SS_NULLRP);
+	(void) pine_simple_send(outgoing, &body, NULL,NULL,NULL,NULL, SS_NULLRP);
 
 	q_status_message(SM_ORDER, 1, 3, "Thanks for being counted!");
     }
     else
       q_status_message(SM_ORDER | SM_DING, 3, 4,
-		       "Problem creating space for message text.");
+	               "Problem creating space for message text.");
 
     mail_free_envelope(&outgoing);
     pine_free_body(&body);

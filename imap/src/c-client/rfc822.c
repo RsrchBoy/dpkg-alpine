@@ -1,13 +1,6 @@
 /* ========================================================================
- * Copyright 1988-2008 University of Washington
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * 
+ * Copyright 2013-2015 Eduardo Chappa
+ * Copyright 2008-2010 Mark Crispin
  * ========================================================================
  */
 
@@ -15,13 +8,19 @@
  * Program:	RFC 2822 and MIME routines
  *
  * Author:	Mark Crispin
- *		UW Technology
- *		University of Washington
- *		Seattle, WA  98195
- *		Internet: MRC@Washington.EDU
  *
  * Date:	27 July 1988
- * Last Edited:	14 May 2008
+ * Last Edited:	30 September 2010
+ *
+ * Previous versions of this file were:
+ *
+ * Copyright 1988-2008 University of Washington
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * This original version of this file is
  * Copyright 1988 Stanford University
@@ -36,6 +35,10 @@
 #include <stdio.h>
 #include <time.h>
 #include "c-client.h"
+
+
+/* internal prototype */
+void	initialize_body(BODY *b, char *h, char *t);
 
 
 /* Support for deprecated features in earlier specifications.  Note that this
@@ -261,6 +264,23 @@ void rfc822_parse_msg_full (ENVELOPE **en,BODY **bdy,char *s,unsigned long i,
 				/* now parse the body */
   if (body) rfc822_parse_content (body,bs,host,depth,flags);
 }
+
+void
+initialize_body(BODY *b, char *h, char *t)
+{
+    if(b->type==TYPEMULTIPART){
+        PART *p;
+	  cpytxt(&b->mime.text, h+b->mime.offset, b->mime.text.size);
+          cpytxt(&b->contents.text, t + b->contents.offset, b->size.bytes);
+
+          for(p=b->nested.part; p; p=p->next)
+            initialize_body((BODY *)p, h, t);
+    }
+    else {
+ 	cpytxt(&b->mime.text, h+b->mime.offset, b->mime.text.size);  
+        cpytxt(&b->contents.text, t + b->contents.offset, b->size.bytes);  
+    }
+}
 
 /* Parse a message body content
  * Accepts: pointer to body structure
@@ -284,17 +304,26 @@ void rfc822_parse_content (BODY *body,STRING *bs,char *h,unsigned long depth,
   }
   if (!body->subtype)		/* default subtype if still unknown */
     body->subtype = cpystr (rfc822_default_subtype (body->type));
-				/* note offset and sizes */
-  body->contents.offset = GETPOS (bs);
-				/* note internal body size in all cases */
-  body->size.bytes = body->contents.text.size = i = SIZE (bs);
-  if (!(flags & DR_CRLF)) body->size.bytes = strcrlflen (bs);
+				/* calculate offset */
+  if (bs->size >= (body->contents.offset = GETPOS (bs))) {
+    body->contents.text.size = i = SIZE (bs);
+    body->size.bytes = (flags & DR_CRLF) ? i : strcrlflen (bs);
+  }
+  else {			/* paranoia code */
+#if 0
+    fatal("rfc822_parse_content botch");
+#endif
+    body->size.bytes = body->contents.text.size = i = 0;
+    body->contents.offset = bs->size;
+    SETPOS(bs,bs->size);
+  }
+
   switch (body->type) {		/* see if anything else special to do */
   case TYPETEXT:		/* text content */
     if (!body->parameter) {	/* no parameters set */
       body->parameter = mail_newbody_parameter ();
       body->parameter->attribute = cpystr ("CHARSET");
-      while (i--) {		/* count lines and guess charset */
+      while (i && i--) {	/* count lines and guess charset */
 	c = SNX (bs);		/* get current character */
 				/* charset still unknown? */
 	if (!body->parameter->value) {
@@ -319,7 +348,7 @@ void rfc822_parse_content (BODY *body,STRING *bs,char *h,unsigned long depth,
       }
     }
 				/* just count lines */
-    else while (i--) if ((SNX (bs)) == '\n') body->size.lines++;
+    else while (i && i--) if ((SNX (bs)) == '\n') body->size.lines++;
     break;
 
   case TYPEMESSAGE:		/* encapsulated message */
@@ -330,39 +359,72 @@ void rfc822_parse_content (BODY *body,STRING *bs,char *h,unsigned long depth,
       case ENC7BIT:		/* these are valid nested encodings */
       case ENC8BIT:
       case ENCBINARY:
+      case ENCBASE64:		/* message/rfc822 message encoded as base64 */
 	break;
       default:
 	MM_LOG ("Ignoring nested encoding of message contents",PARSE);
       }
-				/* hunt for blank line */
+
       for (c = '\012',j = 0; (i > j) && ((c != '\012') || (CHR(bs) != '\012'));
 	   j++) if ((c1 = SNX (bs)) != '\015') c = c1;
-      if (i > j) {		/* unless no more text */
-	c1 = SNX (bs);		/* body starts here */
-	j++;			/* advance count */
+
+      switch(body->encoding){
+	case ENCBASE64: 
+	      SETPOS (bs,body->contents.offset);
+	      s = (char *) fs_get ((size_t) j + 1);
+	      for (s1 = s,k = j; k--; *s1++ = SNX (bs));
+	      s[j] = '\0';		/* decode encoded text */
+	      if((s1 = strstr(s, "--")) != NULL)
+		*(s1-2) = '\0';
+	      s1 = (char *) rfc822_base64 (s, strlen(s), &k);
+	      if(s1){
+		char *t = strstr(s1, "\r\n\r\n");
+
+		if(t != NULL){
+		   char *u;
+		   STRING b;
+
+		   t += 4;
+		   u = cpystr(t);
+                   INIT(&b, mail_string, t, strlen(t));
+		   rfc822_parse_msg_full(&body->nested.msg->env, &body->nested.msg->body, t, 
+					strlen(t), &b, BADHOST, 0, 0);
+		   initialize_body(body->nested.msg->body, u, u);
+		}
+		fs_give((void **)&s1);
+	      }
+	      fs_give((void **)&s);
+	      break;
+
+	default:
+	      if (i > j) {		/* unless no more text */
+		c1 = SNX (bs);		/* body starts here */
+		j++;			/* advance count */
+	      }
+					/* note body text offset and header size */
+	      body->nested.msg->header.text.size = j;
+	      body->nested.msg->text.text.size = body->contents.text.size - j;
+	      body->nested.msg->text.offset = GETPOS (bs);
+	      body->nested.msg->full.offset = body->nested.msg->header.offset =
+		body->contents.offset;
+	      body->nested.msg->full.text.size = body->contents.text.size;
+					/* copy header string */
+	      SETPOS (bs,body->contents.offset);
+	      s = (char *) fs_get ((size_t) j + 1);
+	      for (s1 = s,k = j; k--; *s1++ = SNX (bs));
+	      s[j] = '\0';		/* tie off string (not really necessary) */
+					/* now parse the body */
+	      rfc822_parse_msg_full (&body->nested.msg->env,&body->nested.msg->body,s,
+				     j,bs,h,depth+1,flags);
+	      fs_give ((void **) &s);	/* free header string */
       }
-				/* note body text offset and header size */
-      body->nested.msg->header.text.size = j;
-      body->nested.msg->text.text.size = body->contents.text.size - j;
-      body->nested.msg->text.offset = GETPOS (bs);
-      body->nested.msg->full.offset = body->nested.msg->header.offset =
-	body->contents.offset;
-      body->nested.msg->full.text.size = body->contents.text.size;
-				/* copy header string */
-      SETPOS (bs,body->contents.offset);
-      s = (char *) fs_get ((size_t) j + 1);
-      for (s1 = s,k = j; k--; *s1++ = SNX (bs));
-      s[j] = '\0';		/* tie off string (not really necessary) */
-				/* now parse the body */
-      rfc822_parse_msg_full (&body->nested.msg->env,&body->nested.msg->body,s,
-			     j,bs,h,depth+1,flags);
-      fs_give ((void **) &s);	/* free header string */
 				/* restore position */
       SETPOS (bs,body->contents.offset);
     }
 				/* count number of lines */
     while (i--) if (SNX (bs) == '\n') body->size.lines++;
     break;
+
   case TYPEMULTIPART:		/* multiple parts */
     switch (body->encoding) {	/* make sure valid encoding */
     case ENC7BIT:		/* these are valid nested encodings */
@@ -380,7 +442,6 @@ void rfc822_parse_content (BODY *body,STRING *bs,char *h,unsigned long depth,
     if (!s1) s1 = "-";		/* yucky default */
     j = strlen (s1) + 2;	/* length of cookie and header */
     c = '\012';			/* initially at beginning of line */
-
     while (i > j) {		/* examine data */
       if (m = GETPOS (bs)) m--;	/* get position in front of character */
       switch (c) {		/* examine each line */
@@ -405,6 +466,7 @@ void rfc822_parse_content (BODY *body,STRING *bs,char *h,unsigned long depth,
 	  }
 	  break;
 	}
+
 				/* swallow trailing whitespace */
 	while ((c == ' ') || (c == '\t'))
 	  c = ((i && i--) ? (SNX (bs)) : '\012');
@@ -478,7 +540,6 @@ void rfc822_parse_content (BODY *body,STRING *bs,char *h,unsigned long depth,
 				/* end of data ties off the header */
 	    if (!i || !--i) s1[j++] = c = '\0';
 	  }
-
 				/* find header item type */
 	  if (((s1[0] == 'C') || (s1[0] == 'c')) &&
 	      ((s1[1] == 'O') || (s1[1] == 'o')) &&
@@ -494,6 +555,7 @@ void rfc822_parse_content (BODY *body,STRING *bs,char *h,unsigned long depth,
 	    rfc822_parse_content_header (&part->body,ucase (s1+8),s);
 	  }
 	}
+
 				/* skip header trailing (CR)LF */
 	if (i && (CHR (bs) =='\015')) {i--; c1 = SNX (bs);}
 	if (i && (CHR (bs) =='\012')) {i--; c1 = SNX (bs);}
@@ -1061,7 +1123,7 @@ ADDRESS *rfc822_parse_addrspec (char *string,char **ret,char *defaulthost)
   else if (!(adr->host = rfc822_parse_domain (++end,&end)))
     adr->host = cpystr (errhst);
 				/* default host if missing */
-  if (!adr->host) adr->host = cpystr (defaulthost);
+  if (!adr->host) adr->host = cpystr (defaulthost ? defaulthost : "@");
 				/* try person name in comments if missing */
   if (end && !(adr->personal && *adr->personal)) {
     while (*end == ' ') ++end;	/* see if we can find a person name here */
@@ -1380,7 +1442,7 @@ static long rfc822_output_data (RFC822BUFFER *buf,char *string,long len)
     }
 				/* soutr buffer now if full */
     if ((len || (buf->cur == buf->end)) && !rfc822_output_flush (buf))
-      return NIL;
+		return NIL;
   }
   return LONGT;
 }
@@ -2064,8 +2126,12 @@ unsigned char *rfc822_qprint (unsigned char *src,unsigned long srcl,
 	t = d;			/* accept any leading spaces */
 	break;
       default:			/* two hex digits then */
-	if (!(isxdigit (c) && (((unsigned long) (s - src)) < srcl) &&
-	      (e = *s++) && isxdigit (e))) {
+	if (isxdigit (c) && (((unsigned long) (s - src)) < srcl) &&
+	    isxdigit(*s)) {
+	  e = *s++;		/* eat second hex digit now */
+	  *d++ = hex2byte (c,e);/* merge the two hex digits */
+	}
+	else {
 	  /* This indicates bad MIME.  One way that it can be caused is if
 	     a single-section message was QUOTED-PRINTABLE encoded and then
 	     something (e.g. a mailing list processor) appended text.  The
@@ -2081,10 +2147,7 @@ unsigned char *rfc822_qprint (unsigned char *src,unsigned long srcl,
 	  }
 	  *d++ = '=';		/* treat = as ordinary character */
 	  *d++ = c;		/* and the character following */
-	  t = d;		/* note point of non-space */
-	  break;
 	}
-	*d++ = hex2byte (c,e);	/* merge the two hex digits */
 	t = d;			/* note point of non-space */
 	break;
       }

@@ -3,7 +3,7 @@
  *
  * ========================================================================
  * Copyright 2006-2007 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,5 +130,6 @@ void	    refresh_folder_list(CONTEXT_S *, int, int, MAILSTREAM **);
 int	    folder_complete_internal(CONTEXT_S *, char *, size_t, int *, int);
 void        folder_delete(int, FLIST *);
 unsigned char *folder_name_decoded(unsigned char *);
+unsigned char *folder_name_encoded(unsigned char *);
 
 #endif /* PITH_FOLDER_INCLUDED */

@@ -3,7 +3,7 @@
  *
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -271,6 +271,9 @@ struct pine {
 #endif
 #ifdef PASSFILE
                 *passfile,
+#ifdef SMIME
+		*pwdcertdir,
+#endif /* SMIME inside PASSFILE */
 #endif /* PASSFILE */
                 *pinerc,	/* Location of user's pinerc */
                 *exceptions,	/* Location of user's exceptions */
@@ -307,6 +310,8 @@ struct pine {
     int          hours_to_timeout;
 
     int          tcp_query_timeout;
+
+    int		 sleep;
 
     int          inc_check_timeout;
     int          inc_check_interval;		/* for local and IMAP */
@@ -351,6 +356,9 @@ struct pine {
 
 #ifdef SMIME
     SMIME_STUFF_S *smime;
+#ifdef PASSFILE
+    void *pwdcert;	/* this is of type PERSONAL_CERT */
+#endif /* PASSFILE inside SMIME */
 #endif /* SMIME */
 
     struct variable *vars;
