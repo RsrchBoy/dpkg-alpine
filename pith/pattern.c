@@ -3,8 +3,8 @@ static char rcsid[] = "$Id: pattern.c 1204 2009-02-02 19:54:23Z hubert@u.washing
 #endif
 /*
  * ========================================================================
+ * Copyright 2013-2015 Eduardo Chappa
  * Copyright 2006-2009 University of Washington
- * Copyright 2013 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1295,9 +1295,9 @@ parse_patgrp_slash(char *str, PATGRP_S *patgrp)
     char  *p;
 
     if(!patgrp)
-      panic("NULL patgrp to parse_patgrp_slash");
+      alpine_panic("NULL patgrp to parse_patgrp_slash");
     else if(!(str && *str)){
-	panic("NULL or empty string to parse_patgrp_slash");
+	alpine_panic("NULL or empty string to parse_patgrp_slash");
 	patgrp->bogus = 1;
     }
     else if(!strncmp(str, "/NICK=", 6))
@@ -1516,9 +1516,9 @@ parse_action_slash(char *str, ACTION_S *action)
     NAMEVAL_S *v;
 
     if(!action)
-      panic("NULL action to parse_action_slash");
+      alpine_panic("NULL action to parse_action_slash");
     else if(!(str && *str))
-      panic("NULL or empty string to parse_action_slash");
+      alpine_panic("NULL or empty string to parse_action_slash");
     else if(!strncmp(str, "/ROLE=1", 7))
       action->is_a_role = 1;
     else if(!strncmp(str, "/OTHER=1", 8))
@@ -4764,7 +4764,9 @@ match_pattern(PATGRP_S *patgrp, MAILSTREAM *stream, SEARCHSET *searchset,
     }
 
     if(in_client_callback && is_imap_stream(stream)
-       && (patgrp->alltext || patgrp->bodytext))
+       && (patgrp->alltext || patgrp->bodytext
+	|| (patgrp->inabook != IAB_EITHER
+	    && any_addressbook_in_remote_stream(stream))))
       return(-1);
 
     pgm = match_pattern_srchpgm(patgrp, stream, searchset);

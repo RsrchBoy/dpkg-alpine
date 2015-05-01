@@ -4,8 +4,8 @@ static char rcsid[] = "$Id: mailcmd.c 1266 2009-07-14 18:39:12Z hubert@u.washing
 
 /*
  * ========================================================================
+ * Copyright 2013-2015 Eduardo Chappa
  * Copyright 2006-2009 University of Washington
- * Copyright 2013 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ int       cmd_forward(struct pine *, MSGNO_S *, int);
 int       cmd_bounce(struct pine *, MSGNO_S *, int);
 int       cmd_save(struct pine *, MAILSTREAM *, MSGNO_S *, int, CmdWhere);
 void      role_compose(struct pine *);
-void	  cmd_expunge(struct pine *, MAILSTREAM *, MSGNO_S *);
+int	  cmd_expunge(struct pine *, MAILSTREAM *, MSGNO_S *, int);
 int       cmd_export(struct pine *, MSGNO_S *, int, int);
 char	 *cmd_delete_action(struct pine *, MSGNO_S *, CmdWhere);
 char	 *cmd_delete_view(struct pine *, MSGNO_S *);
@@ -115,8 +115,6 @@ int	  select_by_keyword(MAILSTREAM *, SEARCHSET **);
 char     *choose_a_keyword(void);
 int	  select_sort(struct pine *, int, SortOrder *, int *);
 int       print_index(struct pine *, MSGNO_S *, int);
-
-
 
 /*
  * List of Select options used by apply_* functions...
@@ -304,6 +302,44 @@ static ESCKEY_S flag_text_opt[] = {
     {-1, 0, NULL, NULL}
 };
 
+int 
+alpine_get_password(char *prompt, char *pass, size_t len)
+{
+  int flags = OE_PASSWD | OE_DISALLOW_HELP;
+  pass[0] = '\0';
+  return optionally_enter(pass, 
+			-(ps_global->ttyo ? FOOTER_ROWS(ps_global) : 3),
+                         0, len, prompt, NULL, NO_HELP, &flags);
+}
+
+int smime_import_certificate(char *filename, char *full_filename, size_t len)
+{
+   int   r = 1;
+   static HISTORY_S *history = NULL;
+   static ESCKEY_S eopts[] = {
+	{ctrl('T'), 10, "^T", N_("To Files")},
+	{-1, 0, NULL, NULL},
+	{-1, 0, NULL, NULL}};
+
+   if(F_ON(F_ENABLE_TAB_COMPLETE,ps_global)){
+      eopts[r].ch    =  ctrl('I');
+      eopts[r].rval  = 11;
+      eopts[r].name  = "TAB";
+      eopts[r].label = N_("Complete");
+   }
+
+   eopts[++r].ch = -1;
+
+   filename[0] = '\0';
+   full_filename[0] = '\0';
+
+   r = get_export_filename(ps_global, filename, NULL, full_filename,
+              len, "certificate", "IMPORT", eopts, NULL,
+              -FOOTER_ROWS(ps_global), GE_IS_IMPORT, &history);
+
+   return r;
+}
+
 
 /*----------------------------------------------------------------------
          The giant switch on the commands for index and viewing
@@ -402,7 +438,7 @@ view_text:
 			     : (in_index == View)
 			       ? MH_ANYTHD : MH_NONE);
 		if(i == mn_get_cur(msgmap)){
-		    PINETHRD_S *thrd, *topthrd;
+		    PINETHRD_S *thrd = NULL, *topthrd = NULL;
 
 		    if(THRD_INDX_ENABLED()){
 			mn_dec_cur(stream, msgmap, MH_ANYTHD);
@@ -1207,7 +1243,7 @@ get_out:
 
           /*---------- Expunge ----------*/
       case MC_EXPUNGE :
-	cmd_expunge(state, stream, msgmap);
+	(void) cmd_expunge(state, stream, msgmap, MCMD_NONE);
 	break;
 
 
@@ -1466,7 +1502,7 @@ get_out:
 
           /*--------- Default, unknown command ----------*/
       default:
-	panic("Unexpected command case");
+	alpine_panic("Unexpected command case");
 	break;
     }
 
@@ -2330,12 +2366,62 @@ int
 cmd_bounce(struct pine *state, MSGNO_S *msgmap, int aopt)
 {
     int rv = 0;
+    ACTION_S *role = NULL;
 
     if(any_messages(msgmap, NULL, "to Bounce")){
 	if(MCMD_ISAGG(aopt) && !pseudo_selected(state->mail_stream, msgmap))
 	  return rv;
 
-	rv = bounce(state, NULL);
+	if(MCMD_ISAGG(aopt)){	/* check for possible role */
+	   PAT_STATE  pstate;
+	   int action;
+
+	   if(nonempty_patterns(ROLE_DO_ROLES, &pstate) && first_pattern(&pstate)){
+	     static ESCKEY_S yesno_opts[] = {
+	        {'y', 'y', "Y", N_("Yes")},
+	        {'n', 'n', "N", N_("No")},
+	        {-1, 0, NULL, NULL}
+	     };
+
+             action = radio_buttons(_("Bounce messages using a role? "),
+                                   -FOOTER_ROWS(state), yesno_opts,
+                                   'y', 'x', h_role_compose, RB_NORM);
+	     if(action == 'y'){
+	        void    (*prev_screen)(struct pine *) = NULL, (*redraw)(void) = NULL;
+
+	        redraw = state->redrawer;
+	        state->redrawer = NULL;
+	        prev_screen = state->prev_screen;
+	        role = NULL;
+	        state->next_screen = SCREEN_FUN_NULL;
+            
+	        if(role_select_screen(state, &role, MC_BOUNCE) < 0)
+	            cmd_cancelled(_("Bounce"));
+		else{
+		   if(role)
+		      role = combine_inherited_role(role);
+	           else{
+	               role = (ACTION_S *) fs_get(sizeof(*role));
+		       memset((void *) role, 0, sizeof(*role));
+		       role->nick = cpystr("Default Role");
+		   }
+		}
+
+		if(redraw)
+		   (*redraw)();
+
+		state->next_screen = prev_screen;
+		state->redrawer = redraw;
+		state->mangled_screen = 1;
+	     }
+           }
+        }
+
+	rv = bounce(state, role);
+
+	if(role)
+	  free_action(&role);
+
 	if(MCMD_ISAGG(aopt))
 	  restore_selected(msgmap);
 
@@ -2370,17 +2456,18 @@ cmd_save(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap, int aopt, CmdW
 
     dprint((4, "\n - saving message -\n"));
 
+    if(MCMD_ISAGG(aopt) && !pseudo_selected(stream, msgmap))
+      return rv;
+
     state->ugly_consider_advancing_bit = 0;
     if(F_OFF(F_SAVE_PARTIAL_WO_CONFIRM, state)
        && msgno_any_deletedparts(stream, msgmap)
        && want_to(_("Saved copy will NOT include entire message!  Continue"),
 		  'y', 'n', NO_HELP, WT_FLUSH_IN | WT_SEQ_SENSITIVE) != 'y'){
+	restore_selected(msgmap);
 	cmd_cancelled("Save message");
 	return rv;
     }
-
-    if(MCMD_ISAGG(aopt) && !pseudo_selected(stream, msgmap))
-      return rv;
 
     raw = mn_m2raw(msgmap, mn_get_cur(msgmap));
 
@@ -2659,7 +2746,7 @@ save_prompt(struct pine *state, CONTEXT_S **cntxt, char *nfldr, size_t len_nfldr
     ESCKEY_S	      ekey[10];
 
     if(!cntxt)
-      panic("no context ptr in save_prompt");
+      alpine_panic("no context ptr in save_prompt");
 
     init_hist(&history, HISTSIZE);
 
@@ -3042,7 +3129,7 @@ save_prompt(struct pine *state, CONTEXT_S **cntxt, char *nfldr, size_t len_nfldr
 	    break;
 
 	  default :
-	    panic("Unhandled case");
+	    alpine_panic("Unhandled case");
 	    break;
 	}
 
@@ -3136,18 +3223,43 @@ create_for_save_prompt(CONTEXT_S *context, char *folder, int sequence_sensitive)
 
  Result: 
  ----*/
-void
-cmd_expunge(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap)
+int
+cmd_expunge(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap, int agg)
 {
     long del_count, prefilter_del_count;
-    int we_cancel = 0;
+    int we_cancel = 0, rv = 0;
     char prompt[MAX_SCREEN_COLS+1];
+    char *sequence;
     COLOR_PAIR   *lastc = NULL;
 
     dprint((2, "\n - expunge -\n"));
 
+    del_count = 0;
+
+    sequence = MCMD_ISAGG(agg) ? selected_sequence(stream, msgmap, NULL, 0) : NULL;
+
+    if(MCMD_ISAGG(agg)){
+	long i;
+	MESSAGECACHE *mc;
+	for(i = 1L; i <= stream->nmsgs; i++){
+	    if((mc = mail_elt(stream, i)) != NULL 
+		&& mc->sequence && mc->deleted)
+		del_count++;
+	}
+	if(del_count == 0){
+	    q_status_message(SM_ORDER, 0, 4,
+			 _("No selected messages are deleted"));
+	    return 0;
+	}
+    } else {
+      if(!any_messages(msgmap, NULL, "to Expunge"))
+         return rv;
+    }
+
     if(IS_NEWS(stream) && stream->rdonly){
-	if((del_count = count_flagged(stream, F_DEL)) > 0L){
+	if(!MCMD_ISAGG(agg)) 
+	  del_count = count_flagged(stream, F_DEL);
+	if(del_count > 0L){
 	    state->mangled_footer = 1;
 	    snprintf(prompt, sizeof(prompt), "Exclude %ld message%s from %.*s", del_count,
 		    plural(del_count), sizeof(prompt)-40,
@@ -3163,7 +3275,7 @@ cmd_expunge(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap)
 		if(F_ON(F_NEWS_CROSS_DELETE, state))
 		  cross_delete_crossposts(stream);
 
-		msgno_exclude_deleted(stream, msgmap);
+		msgno_exclude_deleted(stream, msgmap, sequence);
 		clear_index_cache(stream, 0);
 
 		/*
@@ -3187,24 +3299,28 @@ cmd_expunge(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap)
 	else
 	  any_messages(NULL, "deleted", "to Exclude");
 
-	return;
+	return del_count;
     }
     else if(READONLY_FOLDER(stream)){
 	q_status_message(SM_ORDER, 0, 4,
 			 _("Can't expunge. Folder is read-only"));
-	return;
+	return del_count;
     }
 
-    prefilter_del_count = count_flagged(stream, F_DEL|F_NOFILT);
+    if(!MCMD_ISAGG(agg)){
+      prefilter_del_count = count_flagged(stream, F_DEL|F_NOFILT);
+      mail_expunge_prefilter(stream, MI_NONE);
+      del_count = count_flagged(stream, F_DEL|F_NOFILT);
+    }
 
-    mail_expunge_prefilter(stream, MI_NONE);
-
-    if((del_count = count_flagged(stream, F_DEL|F_NOFILT)) != 0){
+    if(del_count != 0){
 	int ret;
+	unsigned char *fname = folder_name_decoded((unsigned char *)state->cur_folder);
 
 	snprintf(prompt, sizeof(prompt), "Expunge %ld message%s from %.*s", del_count,
 		plural(del_count), sizeof(prompt)-40,
-		pretty_fn(state->cur_folder));
+		pretty_fn((char *) fname));
+	if(fname) fs_give((void **)&fname);
 	prompt[sizeof(prompt)-1] = '\0';
 	state->mangled_footer = 1;
 
@@ -3220,7 +3336,7 @@ cmd_expunge(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap)
 	  cmd_cancelled("Expunge");
 
 	if(ret != 'y')
-	  return;
+	  return 0;
     }
 
     dprint((8, "Expunge max:%ld cur:%ld kill:%d\n",
@@ -3242,8 +3358,11 @@ cmd_expunge(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap)
 
     we_cancel = busy_cue(_("Expunging"), NULL, 1);
 
-    if(cmd_expunge_work(stream, msgmap))
+    if(cmd_expunge_work(stream, msgmap, sequence))
       state->mangled_body = 1;
+
+    if(sequence)
+      fs_give((void **)&sequence);
 
     if(we_cancel)
       cancel_busy_cue((sp_expunge_count(stream) > 0) ? 0 : -1);
@@ -3270,14 +3389,18 @@ cmd_expunge(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap)
 	  refresh_sort(stream, msgmap, SRT_NON);
     }
     else{
-	if(del_count)
+	if(del_count){
+	  unsigned char *fname = folder_name_decoded((unsigned char *)state->cur_folder);
 	  q_status_message1(SM_ORDER, 0, 3,
 			    _("No messages expunged from folder \"%s\""),
-			    pretty_fn(state->cur_folder));
+			    pretty_fn((char *) fname));
+	  if(fname) fs_give((void **)&fname);
+	}
 	else if(!prefilter_del_count)
 	  q_status_message(SM_ORDER, 0, 3,
 		     _("No messages marked deleted.  No messages expunged."));
     }
+    return del_count;
 }
 
 
@@ -3409,8 +3532,10 @@ void
 expunge_and_close_begins(int flags, char *folder)
 {
     if(!(flags & EC_NO_CLOSE)){
-	q_status_message1(SM_INFO, 0, 1, "Closing \"%.200s\"...", folder);
+	unsigned char *fname = folder_name_decoded((unsigned char *)folder);
+	q_status_message1(SM_INFO, 0, 1, "Closing \"%.200s\"...", (char *) fname);
 	flush_status_messages(1);
+	if(fname) fs_give((void **)&fname);
     }
 }
 
@@ -5291,6 +5416,7 @@ broach_folder(int qline, int allow_list, int *notrealinbox, CONTEXT_S **context)
     char        expanded[MAXPATH+1],
                 prompt[MAX_SCREEN_COLS+1],
                *last_folder, *p;
+    unsigned char *f1, *f2, *f3;
     static HISTORY_S *history = NULL;
     CONTEXT_S  *tc, *tc2;
     ESCKEY_S    ekey[9];
@@ -5455,9 +5581,28 @@ broach_folder(int qline, int allow_list, int *notrealinbox, CONTEXT_S **context)
 	    }
 	}
 
+	/* is there any other way to do this? The point is that we
+	 * are trying to hide mutf7 from the user, and use the utf8
+	 * equivalent. So we create a variable f to take place of
+	 * newfolder, including content and size. f2 is copy of f1
+	 * that has to freed. Sigh!
+	 */
+	f3 = (unsigned char *) cpystr(newfolder);
+	f1 = fs_get(sizeof(newfolder));
+	f2 = folder_name_decoded(f3);
+	if(f3) fs_give((void **)&f3);
+	strncpy((char *)f1, (char *)f2, sizeof(newfolder));
+	f1[sizeof(newfolder)-1] = '\0';
+	if(f2) fs_give((void **)&f2);
+
 	flags = OE_APPEND_CURRENT;
-        rc = optionally_enter(newfolder, qline, 0, sizeof(newfolder),
-			      prompt, ekey, help, &flags);
+        rc = optionally_enter(f1, qline, 0, sizeof(newfolder),
+			      (char *) prompt, ekey, help, &flags);
+
+	f2 = folder_name_encoded(f1);
+	strncpy(newfolder, (char *)f2, sizeof(newfolder));
+	if(f1) fs_give((void **)&f1);
+	if(f2) fs_give((void **)&f2);
 
 	ps_global->mangled_footer = 1;
 
@@ -5677,7 +5822,7 @@ broach_folder(int qline, int allow_list, int *notrealinbox, CONTEXT_S **context)
 	    break;
 
 	  default :
-	    panic("Unhandled case");
+	    alpine_panic("Unhandled case");
 	    break;
 	}
 
@@ -7069,6 +7214,13 @@ apply_command(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap,
 	    sel_opts3[i++].label = "";
 	}
 
+	if(!is_imap_stream(stream) || LEVELUIDPLUS(stream)){	/* expunge selected messages */
+	    sel_opts3[i].ch      = 'x';
+	    sel_opts3[i].rval    = 'x';
+	    sel_opts3[i].name    = "X";
+	    sel_opts3[i++].label = N_("Expunge");
+	}
+
 	sel_opts3[i].ch      = KEY_DEL;		/* also invisible */
 	sel_opts3[i].rval    = 'd';
 	sel_opts3[i].name    = "";
@@ -7079,7 +7231,7 @@ apply_command(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap,
 	snprintf(prompt, sizeof(prompt), "%s command : ",
 		(flags & AC_FROM_THREAD) ? "THREAD" : "APPLY");
 	prompt[sizeof(prompt)-1] = '\0';
-	cmd = double_radio_buttons(prompt, q_line, sel_opts3, 'z', 'x', NO_HELP,
+	cmd = double_radio_buttons(prompt, q_line, sel_opts3, 'z', 'c', NO_HELP,
 				   RB_SEQ_SENSITIVE);
 	if(isupper(cmd))
 	  cmd = tolower(cmd);
@@ -7160,7 +7312,11 @@ apply_command(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap,
 	select_thread_stmp(state, stream, msgmap);
 	break;
 
-      case 'x' :			/* cancel */
+      case 'x' :			/* Expunge */
+	rv = cmd_expunge(state, stream, msgmap, agg);
+	break;
+
+      case 'c' :			/* cancel */
 	cmd_cancelled((flags & AC_FROM_THREAD) ? "Thread command"
 					       : "Apply command");
 	break;
@@ -7770,7 +7926,8 @@ select_by_text(MAILSTREAM *stream, MSGNO_S *msgmap, long int msgno, SEARCHSET **
 	break;
 
       case 'h' :
-	strcpy(tmp, "Name of HEADER to match : ");
+	strncpy(tmp, "Name of HEADER to match : ", sizeof(tmp)-1);
+	tmp[sizeof(tmp)-1] = '\0';
 	flags = OE_APPEND_CURRENT;
 	namehdr[0] = '\0';
 	r = 'x';

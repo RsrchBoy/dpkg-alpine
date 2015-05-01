@@ -4,7 +4,7 @@ static char rcsid[] = "$Id: adrbklib.c 1266 2009-07-14 18:39:12Z hubert@u.washin
 
 /* ========================================================================
  * Copyright 2006-2009 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3469,7 +3469,7 @@ io_error:
 
     writing = 0;
 
-    if(ab_stream){
+    if(ab_stream != NULL){
 	fclose(ab_stream);
 	ab_stream = (FILE *)NULL;
     }
@@ -4343,7 +4343,7 @@ exp_set_expanded(EXPANDED_S *exp_head, a_c_arg_t n)
 
     nn = (adrbk_cntr_t)n;
     if(!exp_head)
-      panic("exp_head not set in exp_set_expanded");
+      alpine_panic("exp_head not set in exp_set_expanded");
 
     for(e = exp_head; e->next; e = e->next)
       if(e->next->ent >= nn)
@@ -4375,7 +4375,7 @@ exp_unset_expanded(EXPANDED_S *exp_head, a_c_arg_t n)
 
     nn = (adrbk_cntr_t)n;
     if(!exp_head)
-      panic("exp_head not set in exp_unset_expanded");
+      alpine_panic("exp_head not set in exp_unset_expanded");
 
     for(e = exp_head; e->next; e = e->next)
       if(e->next->ent >= nn)
@@ -4407,7 +4407,7 @@ exp_del_nth(EXPANDED_S *exp_head, a_c_arg_t n)
 
     nn = (adrbk_cntr_t)n;
     if(!exp_head)
-      panic("exp_head not set in exp_del_nth");
+      alpine_panic("exp_head not set in exp_del_nth");
 
     e = exp_head->next;
     while(e && e->ent < nn)
@@ -4447,7 +4447,7 @@ exp_add_nth(EXPANDED_S *exp_head, a_c_arg_t n)
 
     nn = (adrbk_cntr_t)n;
     if(!exp_head)
-      panic("exp_head not set in exp_add_nth");
+      alpine_panic("exp_head not set in exp_add_nth");
 
     e = exp_head->next;
     while(e && e->ent < nn)
@@ -6025,4 +6025,46 @@ add_forced_entries(AdrBk *abook)
 			   1);
 	}
     }
+}
+
+/* Go through the list of addressbooks and check if any
+ * of them point to the given stream.
+ */
+int
+any_addressbook_in_remote_stream(MAILSTREAM *stream)
+{
+  int rv = 0;
+  int i = 0, num = 0;
+  char *nickname = NULL;
+  char *filename = NULL;
+  char *q = NULL;
+
+  do{
+    if(ps_global->VAR_ADDRESSBOOK &&
+       ps_global->VAR_ADDRESSBOOK[num] &&
+       ps_global->VAR_ADDRESSBOOK[num][0]){
+	q = ps_global->VAR_ADDRESSBOOK[num++];
+	i = num;
+    }
+    else if(ps_global->VAR_GLOB_ADDRBOOK &&
+	    ps_global->VAR_GLOB_ADDRBOOK[i-num] &&
+	    ps_global->VAR_GLOB_ADDRBOOK[i-num][0]){
+	q = ps_global->VAR_GLOB_ADDRBOOK[i - num];
+	i++;
+    } else q = NULL;
+    if(q != NULL){
+      get_pair(q, &nickname, &filename, 0, 0);
+
+      if(nickname) fs_give((void **)&nickname);
+
+      if(filename){
+	if(*filename == '{' 
+	   && same_stream(filename, stream) != NULL)
+	 rv = 1;
+	fs_give((void **)&filename);
+      }
+    }
+  } while (rv == 0 && q != NULL);
+
+  return rv;
 }

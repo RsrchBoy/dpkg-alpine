@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: mailview.c 1266 2009-07-14 18:39:12Z hubert@u.washin
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -835,8 +835,8 @@ scroll_handle_prompt(HANDLE_S *handle, int force)
 
     if(force
        || (handle->type == URL
-	   && !struncmp(handle->h.url.path, "x-alpine-", 9)
-		|| !struncmp(handle->h.url.path, "x-pine-help", 11)))
+	   && (!struncmp(handle->h.url.path, "x-alpine-", 9)
+		|| !struncmp(handle->h.url.path, "x-pine-help", 11))))
       return(1);
 
     while(1){
@@ -985,7 +985,7 @@ scroll_handle_launch(HANDLE_S *handle, int force)
 
 
       default :
-	panic("Unexpected HANDLE type");
+	alpine_panic("Unexpected HANDLE type");
     }
 
     return(0);
@@ -1088,7 +1088,7 @@ scroll_handle_reframe(int key, int center)
 	}
 
 	if(l == start_line)
-	  panic("Internal Error: no handle found");
+	  alpine_panic("Internal Error: no handle found");
 	else
 	  start_line = l;
     }
@@ -1396,7 +1396,7 @@ url_launch(HANDLE_S *handle)
 #define	URL_MAX_LAUNCH	(2 * MAILTMPLEN)
 
     if(handle->h.url.tool){
-	char	*toolp, *cmdp, *p, *q, cmd[URL_MAX_LAUNCH + 4];
+	char	*toolp, *cmdp, *p, cmd[URL_MAX_LAUNCH + 4];
 	int	 mode, copied = 0;
 	PIPE_S  *syspipe;
 
@@ -1423,6 +1423,9 @@ url_launch(HANDLE_S *handle)
 	      if(!*toolp)
 		*cmdp++ = ' ';
 
+	      if(cmdp[-1] == '\'')	/* unquote old '_URL_' */
+		cmdp--;
+
 	      copied = 1;
 	      for(p = handle->h.url.path;
 		  p && *p && cmdp-cmd < URL_MAX_LAUNCH; p++)
@@ -1432,6 +1435,8 @@ url_launch(HANDLE_S *handle)
 
 	      if(*toolp)
 		toolp += 5;		/* length of "_URL_" */
+	      if(*toolp == '\'')
+		toolp++;
 	  }
 	  else
 	      if(!(*cmdp++ = *toolp++))

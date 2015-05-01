@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: roleconf.c 1266 2009-07-14 18:39:12Z hubert@u.washin
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -5930,7 +5930,7 @@ setup_dummy_pattern_var(struct variable *v, char *name, PATTERN_S *defpat)
     char ***alval;
 
     if(!(v && name))
-      panic("setup_dummy_pattern_var");
+      alpine_panic("setup_dummy_pattern_var");
 
     v->name = (char *) fs_get(strlen(name)+NOTLEN+1);
     snprintf(v->name, strlen(name)+NOTLEN+1, "%s%s", (defpat && defpat->not) ? NOT : "", name);

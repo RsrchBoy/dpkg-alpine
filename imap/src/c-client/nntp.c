@@ -1,4 +1,18 @@
 /* ========================================================================
+ * Copyright 2008-2011 Mark Crispin
+ * ========================================================================
+ */
+
+/*
+ * Program:	Network News Transfer Protocol (NNTP) routines
+ *
+ * Author:	Mark Crispin
+ *
+ * Date:	10 February 1992
+ * Last Edited:	8 April 2011
+ *
+ * Previous versions of this file were:
+ *
  * Copyright 1988-2007 University of Washington
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -7,24 +21,8 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * 
- * ========================================================================
  */
 
-/*
- * Program:	Network News Transfer Protocol (NNTP) routines
- *
- * Author:	Mark Crispin
- *		Networks and Distributed Computing
- *		Computing & Communications
- *		University of Washington
- *		Administration Building, AG-44
- *		Seattle, WA  98195
- *		Internet: MRC@CAC.Washington.EDU
- *
- * Date:	10 February 1992
- * Last Edited:	6 September 2007
- */
 
 
 #include <ctype.h>
@@ -71,6 +69,10 @@ typedef struct nntp_local {
   unsigned int tlssslv23 : 1;	/* TLS using SSLv23 client method */
   unsigned int notlsflag : 1;	/* TLS not used in session */
   unsigned int sslflag : 1;	/* SSL session */
+  unsigned int tls1 : 1;	/* TLSv1 on SSL port */
+  unsigned int dtls1 : 1;	/* DTLSv1 on SSL port */
+  unsigned int tls1_1 : 1;	/* TLSv1_1 on SSL port */
+  unsigned int tls1_2 : 1;	/* TLSv1_2 on SSL port */
   unsigned int novalidate : 1;	/* certificate not validated */
   unsigned int xover : 1;	/* supports XOVER */
   unsigned int xhdr : 1;	/* supports XHDR */
@@ -381,7 +383,7 @@ void nntp_list (MAILSTREAM *stream,char *ref,char *pat)
 void nntp_lsub (MAILSTREAM *stream,char *ref,char *pat)
 {
   void *sdb = NIL;
-  char *s,mbx[MAILTMPLEN];
+  char *s,mbx[MAILTMPLEN],tmp[MAILTMPLEN];
 				/* return data from newsrc */
   if (nntp_canonicalize (ref,pat,mbx,NIL)) newsrc_lsub (stream,mbx);
   if (*pat == '{') {		/* if remote pattern, must be NNTP */
@@ -394,9 +396,10 @@ void nntp_lsub (MAILSTREAM *stream,char *ref,char *pat)
   if (ref && *ref) sprintf (mbx,"%s%s",ref,pat);
   else strcpy (mbx,pat);
 
-  if (s = sm_read (&sdb)) do if (nntp_valid (s) && pmatch (s,mbx))
+  if (s = sm_read (tmp,&sdb)) do if (nntp_valid (s) && pmatch (s,mbx))
     mm_lsub (stream,NIL,s,NIL);
-  while (s = sm_read (&sdb));	/* until no more subscriptions */
+				/* until no more subscriptions */
+  while (s = sm_read (tmp,&sdb));
 }
 
 /* NNTP canonicalize newsgroup name
@@ -663,6 +666,10 @@ MAILSTREAM *nntp_mopen (MAILSTREAM *stream)
     if (LOCAL->tlssslv23) mb.tlssslv23 = T;
     if (LOCAL->notlsflag) mb.notlsflag = T;
     if (LOCAL->sslflag) mb.sslflag = T;
+    if (LOCAL->tls1) mb.tls1 = T;
+    if (LOCAL->dtls1) mb.dtls1 = T;
+    if (LOCAL->tls1_1) mb.tls1_1 = T;
+    if (LOCAL->tls1_2) mb.tls1_2 = T;
     if (LOCAL->novalidate) mb.novalidate = T;
     if (LOCAL->nntpstream->loser) mb.loser = T;
     if (stream->secure) mb.secflag = T;
@@ -684,6 +691,10 @@ MAILSTREAM *nntp_mopen (MAILSTREAM *stream)
     if (mb.tlssslv23) strcat (tmp,"/tls-sslv23");
     if (mb.notlsflag) strcat (tmp,"/notls");
     if (mb.sslflag) strcat (tmp,"/ssl");
+    if (mb.tls1) strcat (tmp,"/tls1");
+    if (mb.tls1_1) strcat (tmp,"/tls1_1");
+    if (mb.tls1_2) strcat (tmp,"/tls1_2");
+    if (mb.dtls1) strcat (tmp,"/dtls1");
     if (mb.novalidate) strcat (tmp,"/novalidate-cert");
     if (mb.loser) strcat (tmp,"/loser");
     if (mb.secflag) strcat (tmp,"/secure");
@@ -693,6 +704,11 @@ MAILSTREAM *nntp_mopen (MAILSTREAM *stream)
 			       (stream->debug ? NOP_DEBUG : NIL)))) return NIL;
   }
 
+  if(!nstream->netstream){
+    mm_log (nstream->reply,ERROR);
+    nntp_close (nstream);	/* punt stream */
+    return NIL;
+  }
 				/* always zero messages if halfopen */
   if (stream->halfopen) i = j = k = rnmsgs = nmsgs = 0;
 				/* otherwise open the newsgroup */
@@ -748,6 +764,10 @@ MAILSTREAM *nntp_mopen (MAILSTREAM *stream)
   if (LOCAL->tlssslv23) strcat (tmp,"/tls-sslv23");
   if (LOCAL->notlsflag) strcat (tmp,"/notls");
   if (LOCAL->sslflag) strcat (tmp,"/ssl");
+  if (LOCAL->tls1) strcat (tmp,"/tls1");
+  if (LOCAL->dtls1) strcat (tmp,"/dtls1");
+  if (LOCAL->tls1_1) strcat (tmp,"/tls1_1");
+  if (LOCAL->tls1_2) strcat (tmp,"/tls1_2");
   if (LOCAL->novalidate) strcat (tmp,"/novalidate-cert");
   if (LOCAL->nntpstream->loser) strcat (tmp,"/loser");
   if (stream->secure) strcat (tmp,"/secure");
@@ -1719,8 +1739,7 @@ SENDSTREAM *nntp_open_full (NETDRIVER *dv,char **hostlist,char *service,
 				/* negotiate TLS */
     if (stream->netstream->stream =
 	(*stls) (stream->netstream->stream,mb.host,
-		 (mb.tlssslv23 ? NIL : NET_TLSCLIENT) |
-		 (mb.novalidate ? NET_NOVALIDATECERT:NIL)))
+		 SSL_MTHD(mb) | (mb.novalidate ? NET_NOVALIDATECERT:NIL)))
       extok = nntp_extensions (stream,(mb.secflag ? AU_SECURE : NIL) |
 			       (mb.authuser[0] ? AU_AUTHUSER : NIL));
     else {
@@ -1736,6 +1755,7 @@ SENDSTREAM *nntp_open_full (NETDRIVER *dv,char **hostlist,char *service,
     mm_log ("Unable to negotiate TLS with this server",ERROR);
     return NIL;
   }
+  if(stream && !stream->netstream) stream = nntp_close(stream);
   if (stream) {			/* have a session? */
     if (mb.user[0]) {		/* yes, have user name? */
       if ((long) mail_parameters (NIL,GET_TRUSTDNS,NIL)) {

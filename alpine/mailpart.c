@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: mailpart.c 1074 2008-06-04 00:08:43Z hubert@u.washin
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2137,6 +2137,15 @@ display_attachment(long int msgno, ATTACH_S *a, int flags)
 		 ? a->body->subtype : "unk");
     }
 
+    /* We are creating a temporary name. This is just a prefix. If you
+     * need the original name, use the save command, so if the prefix
+     * is too long, shorten it.
+     */
+    if (strlen(prefix) > 9){
+	prefix[9]  = '-';
+	prefix[10] = '\0';
+    }
+
     filename = temp_nam_ext(NULL, prefix, ext);
 
     if(!filename){
@@ -2626,7 +2635,7 @@ process_attachment_cmd(int cmd, MSGNO_S *msgmap, SCROLL_S *sparms)
 	break;
 
       default:
-	panic("Unexpected command case");
+	alpine_panic("Unexpected command case");
 	break;
     }
 
@@ -2695,6 +2704,9 @@ format_msg_att(long int msgno, ATTACH_S **a, HANDLE_S **handlesp, gf_io_t pc, in
 		  && gf_puts("text segment]", pc)
 		  && gf_puts(NEWLINE, pc)))
 	  rv = 0;
+
+	++(*a);
+
     }
     else if((*a)->body->subtype 
 	    && strucmp((*a)->body->subtype, "external-body") == 0) {

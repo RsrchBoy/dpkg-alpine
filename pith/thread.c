@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: thread.c 942 2008-03-04 18:21:33Z hubert@u.washingto
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -884,7 +884,7 @@ collapse_or_expand(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap,
 void
 select_thread_stmp(struct pine *state, MAILSTREAM *stream, MSGNO_S *msgmap)
 {
-    PINETHRD_S   *thrd;
+    PINETHRD_S   *thrd = NULL;
     unsigned long rawno, in_thread, set_in_thread, save_branch;
 
     /* ugly bit means the same thing as return of 1 from individual_select */

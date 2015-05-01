@@ -4,8 +4,8 @@ static char rcsid[] = "$Id: reply.c 1074 2008-06-04 00:08:43Z hubert@u.washingto
 
 /*
  * ========================================================================
+ * Copyright 2013-2015 Eduardo Chappa
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ static char rcsid[] = "$Id: reply.c 1074 2008-06-04 00:08:43Z hubert@u.washingto
 #include "../pith/ablookup.h"
 #include "../pith/mailcmd.h"
 #include "../pith/margin.h"
+#include "../pith/smime.h"
 
 
 /*
@@ -66,6 +67,39 @@ int	(*pith_opt_reply_to_all_prompt)(int *);
 
 char *(*pith_opt_user_agent_prefix)(void);
 
+/* compare two subjects and return if they are the same.
+   We compare stripped subjects, that is, those that do
+   not have re/fwd. Before we compare the subjects, we
+   decode them in case they were encoded.
+   Return value: 0 - not the same subject, 1 - same subject.
+*/
+
+int
+same_subject(char *s, char *t)
+{
+   int rv = 0;
+   int i, j, len;
+   char *s1, *s2;	/* holds decoded subjects from s and t */
+   char *u, *v;
+
+   if (s == NULL || t == NULL)
+     return s == t ? 1 : 0;
+
+   i = strlen(s); j = strlen(t);
+   len = i < j ? j : i;
+   u  = fs_get(6*len+1);
+   v  = fs_get(6*len+1);
+   s1 = (char *) rfc1522_decode_to_utf8(u, 6*len + 1, s);
+   s2 = (char *) rfc1522_decode_to_utf8(v, 6*len + 1, t);
+   mail_strip_subject(s1, &u);
+   mail_strip_subject(s2, &v);
+
+   rv = !strucmp(u, v);
+
+   fs_give((void **) &u);
+   fs_give((void **) &v);
+   return rv;
+}
 
 /*
  * reply_harvest - 
@@ -767,24 +801,35 @@ reply_quote_initials(char *name)
 {
     char *s = name,
          *w = name;
-    
+    int i, j;
+    CBUF_S cbuf;
+    UCS ucs;
+
+    cbuf.cbuf[i = 0] = '\0';
+    cbuf.cbufp = cbuf.cbuf;
+    cbuf.cbufend = cbuf.cbuf;
+
     /* while there are still characters to look at */
     while(s && *s){
 	/* skip to next initial */
-	while(*s && isspace((unsigned char) *s))
+	while(*s && (unsigned char) *s == ' ')
 	  s++;
 	
-	/* skip over cruft like single quotes */
-	while(*s && !isalnum((unsigned char) *s))
-	  s++;
+        if(!utf8_to_ucs4_oneatatime((unsigned char) *s++ & 0xff, &cbuf, &ucs, NULL)){
+	  i++;
+	  continue;
+        }
 
-	/* copy initial */
-	if(*s)
-	  *w++ = *s++;
+	/* copy cbuf */
+	for(j = 0; j <= i; j++) *w++ =  cbuf.cbuf[j];
 	
 	/* skip to end of this piece of name */
-	while(*s && !isspace((unsigned char) *s))
+	while(*s && (unsigned char) *s != ' ')
 	  s++;
+
+        cbuf.cbuf[i = 0] = '\0';
+        cbuf.cbufp = cbuf.cbuf;
+        cbuf.cbufend = cbuf.cbuf;
     }
 
     if(w)
@@ -2238,11 +2283,23 @@ forward_body(MAILSTREAM *stream, ENVELOPE *env, struct mail_bodystruct *orig_bod
 	}
     }
     else if(orig_body->type == TYPEMULTIPART) {
-	if(orig_body->subtype && !strucmp(orig_body->subtype, "signed")
-	   && orig_body->nested.part){
+	if(orig_body->subtype 
+		&& ((!strucmp(orig_body->subtype, "signed") && orig_body->nested.part)
+#ifdef SMIME
+		    || (!strucmp(orig_body->subtype, "mixed") 
+			  && orig_body->nested.part
+			  && orig_body->nested.part->body.type ==  TYPEMULTIPART
+			  && orig_body->nested.part->body.subtype
+			  && (!strucmp(orig_body->nested.part->body.subtype, OUR_PKCS7_ENCLOSURE_SUBTYPE)
+				|| !strucmp(orig_body->nested.part->body.subtype, "signed")))
+		    || !strucmp(orig_body->subtype, OUR_PKCS7_ENCLOSURE_SUBTYPE)
+#endif /* SMIME */
+	   )){
 	    /* only operate on the signed data (not the signature) */
 	    body = forward_body(stream, env, &orig_body->nested.part->body,
-				msgno, sect_prefix, msgtext, flags);
+			msgno, 
+			orig_body->nested.part->body.type ==  TYPEMULTIPART 
+				? section : sect_prefix, msgtext, flags);
 	}
 	/*---- Message is multipart ----*/
 	else if(!(orig_body->subtype && !strucmp(orig_body->subtype,

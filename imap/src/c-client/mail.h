@@ -1,4 +1,18 @@
 /* ========================================================================
+ * Copyright 2008-2011 Mark Crispin
+ * ========================================================================
+ */
+
+/*
+ * Program:	Mailbox Access routines
+ *
+ * Author:	Mark Crispin
+ *
+ * Date:	22 November 1989
+ * Last Edited:	8 April 2011
+ *
+ * Previous versions of this file were
+ *
  * Copyright 1988-2008 University of Washington
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -7,26 +21,11 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * 
- * ========================================================================
- */
-
-/*
- * Program:	Mailbox Access routines
- *
- * Author:	Mark Crispin
- *		UW Technology
- *		University of Washington
- *		Seattle, WA  98195
- *		Internet: MRC@Washington.EDU
- *
- * Date:	22 November 1989
- * Last Edited:	16 December 2008
  */
 
 /* The Version */
 
-#define CCLIENTVERSION "2007e"
+#define CCLIENTVERSION "2010"
 
 /* Build parameters */
 
@@ -177,6 +176,8 @@
 #define SET_EXTERNALAUTHID (long) 230
 #define GET_SSLCAPATH (long) 231
 #define SET_SSLCAPATH (long) 232
+#define GET_RESTRICTIONS (long) 233
+#define SET_RESTRICTIONS (long) 234
 
 	/* 3xx: TCP/IP */
 #define GET_OPENTIMEOUT (long) 300
@@ -428,6 +429,14 @@
 #define NET_TLSCLIENT ((unsigned long) 0x10000000)
 				/* try SSL mode */
 #define NET_TRYSSL ((unsigned long) 0x8000000)
+				/* try TLS1 mode */
+#define NET_TRYTLS1   ((unsigned long) 0x1000000)
+				/* try TLS1_1 mode */
+#define NET_TRYTLS1_1 ((unsigned long) 0x2000000)
+				/* try TLS1_2 mode */
+#define NET_TRYTLS1_2 ((unsigned long) 0x4000000)
+				/* try DTLS1 mode */
+#define NET_TRYDTLS1   ((unsigned long) 0x8000000)
 
 /* Close options */
 
@@ -654,6 +663,10 @@ typedef struct net_mailbox {
   unsigned int dbgflag : 1;	/* debug flag */
   unsigned int secflag : 1;	/* secure flag */
   unsigned int sslflag : 1;	/* SSL driver flag */
+  unsigned int tls1    : 1;	/* Use TLSv1 */
+  unsigned int tls1_1  : 1;	/* Use TLSv1.1 */
+  unsigned int tls1_2  : 1;	/* Use TLSV1.2 */
+  unsigned int dtls1   : 1;	/* Use DTLSv1 */
   unsigned int trysslflag : 1;	/* try SSL driver first flag */
   unsigned int novalidate : 1;	/* don't validate certificates */
   unsigned int tlsflag : 1;	/* TLS flag */
@@ -663,6 +676,14 @@ typedef struct net_mailbox {
   unsigned int loser : 1;	/* server is a loser */
   unsigned int tlssslv23 : 1;	/* force SSLv23 client method over TLS */
 } NETMBX;
+
+#define SSL_MTHD(M)  ((M).tlssslv23	? NIL		\
+			: (M).tls1	? NET_TRYTLS1	\
+			: (M).tls1_1	? NET_TRYTLS1_1	\
+			: (M).tls1_2	? NET_TRYTLS1_2	\
+			: (M).dtls1	? NET_TRYDTLS1	\
+			: NET_TLSCLIENT)
+
 
 /* Item in an address list */
 
@@ -1683,6 +1704,7 @@ void mail_gc (MAILSTREAM *stream,long gcflags);
 void mail_gc_msg (MESSAGE *msg,long gcflags);
 void mail_gc_body (BODY *body);
 
+BODY *mail_body_section (BODY *b, unsigned char *section);
 BODY *mail_body (MAILSTREAM *stream,unsigned long msgno,
 		 unsigned char *section);
 char *mail_date (char *string,MESSAGECACHE *elt);
@@ -1819,7 +1841,7 @@ char *net_localhost (NETSTREAM *stream);
 
 long sm_subscribe (char *mailbox);
 long sm_unsubscribe (char *mailbox);
-char *sm_read (void **sdb);
+char *sm_read (char *sbname,void **sdb);
 
 void ssl_onceonlyinit (void);
 char *ssl_start_tls (char *s);

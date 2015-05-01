@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: sort.c 1142 2008-08-13 17:22:21Z hubert@u.washington
 /*
  * ========================================================================
  * Copyright 2006-2007 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -488,7 +488,7 @@ sort_sort_callback(MAILSTREAM *stream, long unsigned int *list, long unsigned in
     dprint((2, "sort_sort_callback\n"));
 
     if(mn_get_total(g_sort.msgmap) < nmsgs)
-      panic("Message count shrank after sort!");
+      alpine_panic("Message count shrank after sort!");
 
     /* copy ulongs to array of longs */
     for(i = nmsgs; i > 0; i--)

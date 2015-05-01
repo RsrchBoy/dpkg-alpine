@@ -3,7 +3,7 @@
  *
  * ========================================================================
  * Copyright 2006-2007 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -239,6 +239,7 @@ typedef struct  {
 typedef	struct CELL {
 	unsigned int c : 24;		/* Character value in cell      */
 	unsigned int a : 8;		/* Its attributes               */
+	unsigned int d : 1;		/* direction			*/
 } CELL;
 
 /* flags for color_options */

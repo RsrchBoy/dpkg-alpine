@@ -4,8 +4,8 @@ static char rcsid[] = "$Id: alpine.c 1266 2009-07-14 18:39:12Z hubert@u.washingt
 
 /*
  * ========================================================================
+ * Copyright 2013-2015 Eduardo Chappa
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,8 +50,8 @@ static char rcsid[] = "$Id: alpine.c 1266 2009-07-14 18:39:12Z hubert@u.washingt
 #include "init.h"
 #include "remote.h"
 #include "pattern.h"
-#include "newuser.h"
 #include "setup.h"
+#include "newuser.h"
 #include "adrbkcmd.h"
 #include "signal.h"
 #include "kblock.h"
@@ -190,6 +190,8 @@ main(int argc, char **argv)
     pith_opt_current_expunged	   = mm_expunged_current;
 #ifdef	SMIME
     pith_opt_smime_get_passphrase  = smime_get_passphrase;
+    pith_smime_import_certificate  = smime_import_certificate;
+    pith_smime_enter_password	   = alpine_get_password;
 #endif
 #ifdef	ENABLE_LDAP
     pith_opt_save_ldap_entry       = save_ldap_entry;
@@ -2326,7 +2328,7 @@ choose_setup_cmd(int cmd, MSGNO_S *msgmap, SCROLL_S *sparms)
 	break;
 
       default:
-	panic("Unexpected command in choose_setup_cmd");
+	alpine_panic("Unexpected command in choose_setup_cmd");
 	break;
     }
 
@@ -3322,7 +3324,7 @@ pine_gets_bytes(int reset)
   This is also called from imap routines and fs_get and fs_resize.
   ----*/
 void
-panic(char *message)
+alpine_panic(char *message)
 {
     char buf[256];
 

@@ -1,652 +1,668 @@
+/* include/config.h.  Generated from config.h.in by configure.  */
 /* include/config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Default configuration value */
-#undef ANSI_PRINTER
+#define ANSI_PRINTER "attached-to-ansi"
 
 /* Use Apple OS X key chain for credential caching */
-#undef APPLEKEYCHAIN
+/* #undef APPLEKEYCHAIN */
 
 /* Enable background posting support */
-#undef BACKGROUND_POST
+#define BACKGROUND_POST /**/
 
 /* Default configuration value */
-#undef CHECK_POINT_FREQ
+#define CHECK_POINT_FREQ 12
 
 /* Default configuration value */
-#undef CHECK_POINT_TIME
+#define CHECK_POINT_TIME 420
 
 /* File name separator as character constant */
-#undef C_FILESEP
+#define C_FILESEP '/'
 
 /* Default configuration value */
-#undef DEADLETTER
+#define DEADLETTER "dead.letter"
 
 /* Compile in debugging */
-#undef DEBUG
+#define DEBUG 1
 
 /* Default configuration value */
-#undef DEBUGFILE
+#define DEBUGFILE ".pine-debug"
 
 /* Display debug messages in journal */
-#undef DEBUGJOURNAL
+#define DEBUGJOURNAL 1
 
 /* Default configuration value */
-#undef DEFAULT_COLUMNS_ON_TERMINAL
+#define DEFAULT_COLUMNS_ON_TERMINAL 80
 
 /* Default configuration value */
-#undef DEFAULT_DEBUG
+#define DEFAULT_DEBUG 2
 
 /* Default configuration value */
-#undef DEFAULT_LINES_ON_TERMINAL
+#define DEFAULT_LINES_ON_TERMINAL 24
 
 /* Default configuration value */
-#undef DEFAULT_SAVE
+#define DEFAULT_SAVE "saved-messages"
 
 /* Default configuration value */
-#undef DF_AB_SORT_RULE
+#define DF_AB_SORT_RULE "fullname-with-lists-last"
 
 /* Default configuration value */
-#undef DF_ADDRESSBOOK
+#define DF_ADDRESSBOOK ".addressbook"
 
 /* Default configuration value */
-#undef DF_CACERT_DIR
+#define DF_CACERT_DIR ".alpine-smime/ca"
+
+/* Name of default certificate authority container */
+#define DF_CA_CONTAINER "CAContainer"
 
 /* Default configuration value */
-#undef DF_DEFAULT_FCC
+#define DF_DEFAULT_FCC "sent-mail"
 
 /* Default configuration value */
-#undef DF_DEFAULT_PRINTER
+#define DF_DEFAULT_PRINTER ANSI_PRINTER
 
 /* Default configuration value */
-#undef DF_ELM_STYLE_SAVE
+#define DF_ELM_STYLE_SAVE "no"
 
 /* Default configuration value */
-#undef DF_FCC_RULE
+#define DF_FCC_RULE "default-fcc"
 
 /* Default configuration value */
-#undef DF_FILLCOL
+#define DF_FILLCOL "74"
 
 /* Default configuration value */
-#undef DF_FLD_SORT_RULE
+#define DF_FLD_SORT_RULE "alphabetical"
 
 /* Default configuration value */
-#undef DF_HEADER_IN_REPLY
+#define DF_HEADER_IN_REPLY "no"
 
 /* Default configuration value */
-#undef DF_KBLOCK_PASSWD_COUNT
+#define DF_KBLOCK_PASSWD_COUNT "1"
 
 /* Default configuration value */
-#undef DF_LOCAL_ADDRESS
+#define DF_LOCAL_ADDRESS "postmaster"
 
 /* Default configuration value */
-#undef DF_LOCAL_FULLNAME
+#define DF_LOCAL_FULLNAME "Local Support"
 
 /* Default configuration value */
-#undef DF_MAILCHECK
+#define DF_MAILCHECK "150"
 
 /* Default configuration value */
-#undef DF_MAIL_DIRECTORY
+#define DF_MAIL_DIRECTORY "mail"
 
 /* Default configuration value */
-#undef DF_MARGIN
+#define DF_MARGIN "0"
 
 /* Default configuration value */
-#undef DF_OLD_STYLE_REPLY
+#define DF_OLD_STYLE_REPLY "no"
 
 /* Default configuration value */
-#undef DF_OVERLAP
+#define DF_OVERLAP "2"
 
 /* Default configuration value */
-#undef DF_PRIVATEKEY_DIR
+#define DF_PRIVATEKEY_DIR ".alpine-smime/private"
+
+/* Name of default private container */
+#define DF_PRIVATE_CONTAINER "PrivateContainer"
 
 /* Default configuration value */
-#undef DF_PUBLICCERT_DIR
+#define DF_PUBLICCERT_DIR ".alpine-smime/public"
+
+/* Name of default public container */
+#define DF_PUBLIC_CONTAINER "PublicContainer"
 
 /* Default configuration value */
-#undef DF_REMOTE_ABOOK_HISTORY
+#define DF_REMOTE_ABOOK_HISTORY "3"
 
 /* Default configuration value */
-#undef DF_SAVED_MSG_NAME_RULE
+#define DF_SAVED_MSG_NAME_RULE "default-folder"
 
 /* Default configuration value */
-#undef DF_SAVE_BY_SENDER
+#define DF_SAVE_BY_SENDER "no"
 
 /* Default configuration value */
-#undef DF_SIGNATURE_FILE
+#define DF_SIGNATURE_FILE ".signature"
 
 /* Default configuration value */
-#undef DF_SORT_KEY
+#define DF_SORT_KEY "arrival"
 
 /* set default value of ssh command string (usually "%s %s -l %s exec
    /etc/r%sd") */
-#undef DF_SSHCMD
+/* #undef DF_SSHCMD */
 
 /* set default value of ssh command path (defining should cause ssh to be
    preferred to rsh) */
-#undef DF_SSHPATH
+/* #undef DF_SSHPATH */
 
 /* Default configuration value */
-#undef DF_STANDARD_PRINTER
+#define DF_STANDARD_PRINTER "lpr"
 
 /* Default configuration value */
-#undef DF_USE_ONLY_DOMAIN_NAME
+#define DF_USE_ONLY_DOMAIN_NAME "no"
 
 /* Interactive, filewise spell checker */
-#undef DF_VAR_SPELLER
+#define DF_VAR_SPELLER "/usr/bin/hunspell"
 
 /* Define enable dmalloc debugging */
-#undef ENABLE_DMALLOC
+/* #undef ENABLE_DMALLOC */
 
 /* Enable LDAP query support */
-#undef ENABLE_LDAP
+/* #undef ENABLE_LDAP */
 
 /* Define to 1 if translation of program messages to the user's native
    language is requested. */
-#undef ENABLE_NLS
+#define ENABLE_NLS 1
 
 /* Enable From address encoding in sent messages */
-#undef ENCODE_FROMS
+/* #undef ENCODE_FROMS */
 
 /* Default configuration value */
-#undef FORWARDED_FLAG
+#define FORWARDED_FLAG "$Forwarded"
 
 /* Define to 1 if `TIOCGWINSZ' requires <sys/ioctl.h>. */
-#undef GWINSZ_IN_SYS_IOCTL
+#define GWINSZ_IN_SYS_IOCTL 1
 
 /* Define if systems uses old BSD-style terminal control */
-#undef HAS_SGTTY
+/* #undef HAS_SGTTY */
 
 /* Define if systems uses termcap terminal database */
-#undef HAS_TERMCAP
+/* #undef HAS_TERMCAP */
 
 /* Define if systems uses terminfo terminal database */
-#undef HAS_TERMINFO
+#define HAS_TERMINFO 1
 
 /* Define if systems uses termio terminal control */
-#undef HAS_TERMIO
+/* #undef HAS_TERMIO */
 
 /* Define if systems uses termios terminal control */
-#undef HAS_TERMIOS
+#define HAS_TERMIOS 1
 
 /* Define to 1 if you have the <assert.h> header file. */
-#undef HAVE_ASSERT_H
+#define HAVE_ASSERT_H 1
 
 /* Define to 1 if you have the MacOS X function CFLocaleCopyCurrent in the
    CoreFoundation framework. */
-#undef HAVE_CFLOCALECOPYCURRENT
+/* #undef HAVE_CFLOCALECOPYCURRENT */
 
 /* Define to 1 if you have the MacOS X function CFPreferencesCopyAppValue in
    the CoreFoundation framework. */
-#undef HAVE_CFPREFERENCESCOPYAPPVALUE
+/* #undef HAVE_CFPREFERENCESCOPYAPPVALUE */
 
 /* Define to 1 if you have the `chown' function. */
-#undef HAVE_CHOWN
+#define HAVE_CHOWN 1
 
 /* Define to 1 if you have the <ctype.h> header file. */
-#undef HAVE_CTYPE_H
+#define HAVE_CTYPE_H 1
 
 /* Define if the GNU dcgettext() function is already present or preinstalled.
    */
-#undef HAVE_DCGETTEXT
+#define HAVE_DCGETTEXT 1
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
-#undef HAVE_DIRENT_H
+#define HAVE_DIRENT_H 1
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#undef HAVE_DLFCN_H
+#define HAVE_DLFCN_H 1
 
 /* Define to 1 if you have the <errno.h> header file. */
-#undef HAVE_ERRNO_H
+#define HAVE_ERRNO_H 1
 
 /* Define to 1 if you have the <fcntl.h> header file. */
-#undef HAVE_FCNTL_H
+#define HAVE_FCNTL_H 1
 
 /* Define to 1 if you have the `fork' function. */
-#undef HAVE_FORK
+#define HAVE_FORK 1
 
 /* Define to 1 if you have the `fsync' function. */
-#undef HAVE_FSYNC
+#define HAVE_FSYNC 1
 
 /* Define to 1 if you have the `getpwnam' function. */
-#undef HAVE_GETPWNAM
+#define HAVE_GETPWNAM 1
 
 /* Define to 1 if you have the `getpwuid' function. */
-#undef HAVE_GETPWUID
+#define HAVE_GETPWUID 1
 
 /* Define if the GNU gettext() function is already present or preinstalled. */
-#undef HAVE_GETTEXT
+#define HAVE_GETTEXT 1
 
 /* Define to 1 if you have the `gettimeofday' function. */
-#undef HAVE_GETTIMEOFDAY
+#define HAVE_GETTIMEOFDAY 1
 
 /* Define to 1 if you have the `getuid' function. */
-#undef HAVE_GETUID
+#define HAVE_GETUID 1
 
 /* Define if you have the iconv() function. */
-#undef HAVE_ICONV
+/* #undef HAVE_ICONV */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-#undef HAVE_INTTYPES_H
+#define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the <langinfo.h> header file. */
-#undef HAVE_LANGINFO_H
+#define HAVE_LANGINFO_H 1
 
 /* Define to 1 if you have the <limits.h> header file. */
-#undef HAVE_LIMITS_H
+#define HAVE_LIMITS_H 1
 
 /* Define to 1 if you have the `listen' function. */
-#undef HAVE_LISTEN
+#define HAVE_LISTEN 1
 
 /* Define to 1 if you have the <locale.h> header file. */
-#undef HAVE_LOCALE_H
+#define HAVE_LOCALE_H 1
 
 /* Define to 1 if you have the `mbstowcs' function. */
-#undef HAVE_MBSTOWCS
+#define HAVE_MBSTOWCS 1
 
 /* Define to 1 if you have the `memcpy' function. */
-#undef HAVE_MEMCPY
+#define HAVE_MEMCPY 1
 
 /* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
+#define HAVE_MEMORY_H 1
 
 /* Define if system supports subsecond, non-alarm sleep */
-#undef HAVE_NANOSLEEP
+#define HAVE_NANOSLEEP 1
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
-#undef HAVE_NDIR_H
+/* #undef HAVE_NDIR_H */
 
 /* Define to 1 if you have the <netdb.h> header file. */
-#undef HAVE_NETDB_H
+#define HAVE_NETDB_H 1
 
 /* Define to 1 if you have the `pclose' function. */
-#undef HAVE_PCLOSE
+#define HAVE_PCLOSE 1
 
 /* Define to 1 if you have the `poll' function. */
-#undef HAVE_POLL
+#define HAVE_POLL 1
 
 /* Define to 1 if you have the `popen' function. */
-#undef HAVE_POPEN
+#define HAVE_POPEN 1
 
 /* System has pthread support */
-#undef HAVE_PTHREAD
+#define HAVE_PTHREAD 1
 
 /* Define to 1 if you have the <pthread.h> header file. */
-#undef HAVE_PTHREAD_H
+#define HAVE_PTHREAD_H 1
 
 /* Define to 1 if you have the `putenv' function. */
-#undef HAVE_PUTENV
+#define HAVE_PUTENV 1
 
 /* Define to 1 if you have the <pwd.h> header file. */
-#undef HAVE_PWD_H
+#define HAVE_PWD_H 1
 
 /* Define to 1 if you have the `qsort' function. */
-#undef HAVE_QSORT
+#define HAVE_QSORT 1
 
 /* Define to 1 if you have the `read' function. */
-#undef HAVE_READ
+#define HAVE_READ 1
 
 /* Regular expression header file exists */
-#undef HAVE_REGEX_H
+#define HAVE_REGEX_H 1
 
 /* Define to 1 if you have the `rename' function. */
-#undef HAVE_RENAME
+#define HAVE_RENAME 1
 
 /* Define to 1 if you have the `select' function. */
-#undef HAVE_SELECT
+#define HAVE_SELECT 1
 
 /* Define to 1 if you have the `setenv' function. */
-#undef HAVE_SETENV
+#define HAVE_SETENV 1
 
 /* Define to 1 if you have the `setjmp' function. */
-#undef HAVE_SETJMP
+#define HAVE_SETJMP 1
 
 /* Define to 1 if you have the <setjmp.h> header file. */
-#undef HAVE_SETJMP_H
+#define HAVE_SETJMP_H 1
 
 /* Define to 1 if you have the `sigaction' function. */
-#undef HAVE_SIGACTION
+#define HAVE_SIGACTION 1
 
 /* Define to 1 if you have the `sigaddset' function. */
-#undef HAVE_SIGADDSET
+#define HAVE_SIGADDSET 1
 
 /* Define to 1 if you have the `sigemptyset' function. */
-#undef HAVE_SIGEMPTYSET
+#define HAVE_SIGEMPTYSET 1
 
 /* Define to 1 if you have the `signal' function. */
-#undef HAVE_SIGNAL
+#define HAVE_SIGNAL 1
 
 /* Define to 1 if you have the <signal.h> header file. */
-#undef HAVE_SIGNAL_H
+#define HAVE_SIGNAL_H 1
 
 /* Define to 1 if you have the `sigprocmask' function. */
-#undef HAVE_SIGPROCMASK
+#define HAVE_SIGPROCMASK 1
 
 /* Define to 1 if you have the `sigrelse' function. */
-#undef HAVE_SIGRELSE
+/* #undef HAVE_SIGRELSE */
 
 /* Define to 1 if you have the `sigset' function. */
-#undef HAVE_SIGSET
+/* #undef HAVE_SIGSET */
 
 /* Define to 1 if you have the `srandom' function. */
-#undef HAVE_SRANDOM
+#define HAVE_SRANDOM 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
+#define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#undef HAVE_STDLIB_H
+#define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the `strchr' function. */
-#undef HAVE_STRCHR
+#define HAVE_STRCHR 1
 
 /* Define to 1 if you have the `strcoll' function and it is properly defined.
    */
-#undef HAVE_STRCOLL
+#define HAVE_STRCOLL 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-#undef HAVE_STRINGS_H
+#define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
-#undef HAVE_STRING_H
+#define HAVE_STRING_H 1
 
 /* Define to 1 if you have the <stropts.h> header file. */
-#undef HAVE_STROPTS_H
+#define HAVE_STROPTS_H 1
 
 /* Define to 1 if you have the `strtol' function. */
-#undef HAVE_STRTOL
+#define HAVE_STRTOL 1
 
 /* Define to 1 if you have the `strtoul' function. */
-#undef HAVE_STRTOUL
+#define HAVE_STRTOUL 1
 
 /* Define if system supplies syslog() logging */
-#undef HAVE_SYSLOG
+#define HAVE_SYSLOG 1
 
 /* Define to 1 if you have the <syslog.h> header file. */
-#undef HAVE_SYSLOG_H
+#define HAVE_SYSLOG_H 1
 
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
-#undef HAVE_SYS_DIR_H
+/* #undef HAVE_SYS_DIR_H */
 
 /* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
    */
-#undef HAVE_SYS_NDIR_H
+/* #undef HAVE_SYS_NDIR_H */
 
 /* Define to 1 if you have the <sys/param.h> header file. */
-#undef HAVE_SYS_PARAM_H
+#define HAVE_SYS_PARAM_H 1
 
 /* Define to 1 if you have the <sys/poll.h> header file. */
-#undef HAVE_SYS_POLL_H
+#define HAVE_SYS_POLL_H 1
 
 /* Define to 1 if you have the <sys/select.h> header file. */
-#undef HAVE_SYS_SELECT_H
+#define HAVE_SYS_SELECT_H 1
 
 /* Define to 1 if you have the <sys/socket.h> header file. */
-#undef HAVE_SYS_SOCKET_H
+#define HAVE_SYS_SOCKET_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#undef HAVE_SYS_STAT_H
+#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/syslog.h> header file. */
-#undef HAVE_SYS_SYSLOG_H
+#define HAVE_SYS_SYSLOG_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H
+#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <sys/uio.h> header file. */
-#undef HAVE_SYS_UIO_H
+#define HAVE_SYS_UIO_H 1
 
 /* Define to 1 if you have the <sys/un.h> header file. */
-#undef HAVE_SYS_UN_H
+#define HAVE_SYS_UN_H 1
 
 /* Define to 1 if you have the <sys/utime.h> header file. */
-#undef HAVE_SYS_UTIME_H
+/* #undef HAVE_SYS_UTIME_H */
 
 /* Define to 1 if you have <sys/wait.h> that is POSIX.1 compatible. */
-#undef HAVE_SYS_WAIT_H
+#define HAVE_SYS_WAIT_H 1
 
 /* Define to 1 if you have the `tmpfile' function. */
-#undef HAVE_TMPFILE
+#define HAVE_TMPFILE 1
 
 /* Define to 1 if you have the `truncate' function. */
-#undef HAVE_TRUNCATE
+#define HAVE_TRUNCATE 1
 
 /* Define to 1 if you have the `uname' function. */
-#undef HAVE_UNAME
+#define HAVE_UNAME 1
 
 /* Define to 1 if the system has the type `union wait'. */
-#undef HAVE_UNION_WAIT
+#define HAVE_UNION_WAIT 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#undef HAVE_UNISTD_H
+#define HAVE_UNISTD_H 1
 
 /* Define to 1 if you have the <utime.h> header file. */
-#undef HAVE_UTIME_H
+#define HAVE_UTIME_H 1
 
 /* Define to 1 if you have the `vfork' function. */
-#undef HAVE_VFORK
+#define HAVE_VFORK 1
 
 /* Define to 1 if you have the <vfork.h> header file. */
-#undef HAVE_VFORK_H
+/* #undef HAVE_VFORK_H */
 
 /* Define to 1 if you have the `wait' function. */
-#undef HAVE_WAIT
+#define HAVE_WAIT 1
 
 /* Define to 1 if you have the `wait4' function. */
-#undef HAVE_WAIT4
+#define HAVE_WAIT4 1
 
 /* Define to 1 if you have the `waitpid' function. */
-#undef HAVE_WAITPID
+#define HAVE_WAITPID 1
 
 /* Define to 1 if you have the <wchar.h> header file. */
-#undef HAVE_WCHAR_H
+#define HAVE_WCHAR_H 1
 
 /* Define to 1 if you have the `wcrtomb' function. */
-#undef HAVE_WCRTOMB
+#define HAVE_WCRTOMB 1
 
 /* Define to 1 if you have the `wcwidth' function. */
-#undef HAVE_WCWIDTH
+#define HAVE_WCWIDTH 1
 
 /* Define to 1 if `fork' works. */
-#undef HAVE_WORKING_FORK
+#define HAVE_WORKING_FORK 1
 
 /* Define to 1 if `vfork' works. */
-#undef HAVE_WORKING_VFORK
+#define HAVE_WORKING_VFORK 1
 
 /* Default configuration value */
-#undef INBOX_NAME
+#define INBOX_NAME "INBOX"
 
 /* Default configuration value */
-#undef INTERRUPTED_MAIL
+#define INTERRUPTED_MAIL ".pine-interrupted-mail"
 
 /* Enable keyboard lock support */
-#undef KEYBOARD_LOCK
+#define KEYBOARD_LOCK /**/
 
 /* Define if you use OpenLDAP 2.3.x deprecated functions */
-#undef LDAP_DEPRECATED
+/* #undef LDAP_DEPRECATED */
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
-#undef LT_OBJDIR
+#define LT_OBJDIR ".libs/"
 
 /* Path to local inboxes for pico newmail check */
-#undef MAILDIR
+#define MAILDIR "/var/spool/mail"
 
 /* Default configuration value */
-#undef MAX_FILLCOL
+#define MAX_FILLCOL 80
 
 /* Default configuration value */
-#undef MAX_SCREEN_COLS
+#define MAX_SCREEN_COLS 500
 
 /* Default configuration value */
-#undef MAX_SCREEN_ROWS
+#define MAX_SCREEN_ROWS 200
 
 /* File mode used to set readonly access */
-#undef MODE_READONLY
+#define MODE_READONLY (0600)
 
 /* Compile in mouse support */
-#undef MOUSE
+#define MOUSE /**/
 
 /* Disallow users changing their From address */
-#undef NEVER_ALLOW_CHANGING_FROM
+/* #undef NEVER_ALLOW_CHANGING_FROM */
 
 /* Default configuration value */
-#undef NUMDEBUGFILES
+#define NUMDEBUGFILES 4
 
 /* OSX TARGET */
-#undef OSX_TARGET
+/* #undef OSX_TARGET */
 
 /* Name of package */
-#undef PACKAGE
+#define PACKAGE "alpine"
 
 /* Define to the address where bug reports for this package should be sent. */
-#undef PACKAGE_BUGREPORT
+#define PACKAGE_BUGREPORT "chappa@washington.edu"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME
+#define PACKAGE_NAME "alpine"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
+#define PACKAGE_STRING "alpine 2.20"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME
+#define PACKAGE_TARNAME "alpine"
 
 /* Define to the home page for this package. */
-#undef PACKAGE_URL
+#define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION
+#define PACKAGE_VERSION "2.20"
 
-/* Password cache file (NOT secure. NOT recommended) */
-#undef PASSFILE
+/* Password cache file (recommended if S/MIME is enabled and configured) */
+#define PASSFILE "ALPINE.PWD"
 
 /* Program users use to change their password */
-#undef PASSWD_PROG
+#define PASSWD_PROG "/usr/bin/passwd"
 
 /* Define if system supports POSIX signal interface */
-#undef POSIX_SIGNALS
+#define POSIX_SIGNALS /**/
 
 /* Default configuration value */
-#undef POSTPONED_MAIL
+#define POSTPONED_MAIL "postponed-mail"
 
 /* Default configuration value */
-#undef POSTPONED_MSGS
+#define POSTPONED_MSGS "postponed-msgs"
+
+/* ps command which outputs list of running commands */
+#define PSEFCMD "/bin/ps auxww"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
-#undef PTHREAD_CREATE_JOINABLE
+/* #undef PTHREAD_CREATE_JOINABLE */
 
 /* Include support for UW Pubcookie Web Authentication */
-#undef PUBCOOKIE
+/* #undef PUBCOOKIE */
 
 /* Define as the return type of signal handlers (`int' or `void'). */
-#undef RETSIGTYPE
+#define RETSIGTYPE void
 
 /* Define to the type of arg 1 for `select'. */
-#undef SELECT_TYPE_ARG1
+#define SELECT_TYPE_ARG1 int
 
 /* Define to the type of args 2, 3 and 4 for `select'. */
-#undef SELECT_TYPE_ARG234
+#define SELECT_TYPE_ARG234 (fd_set *)
 
 /* Define to the type of arg 5 for `select'. */
-#undef SELECT_TYPE_ARG5
+#define SELECT_TYPE_ARG5 (struct timeval *)
 
 /* Local mail submission agent */
-#undef SENDMAIL
+#define SENDMAIL "/usr/sbin/sendmail"
 
 /* Local MSA flags for SMTP on stdin/stdout */
-#undef SENDMAILFLAGS
+#define SENDMAILFLAGS "-bs -odb -oem"
 
 /* Posting agent to use when no nntp-servers defined */
-#undef SENDNEWS
+/* #undef SENDNEWS */
 
 /* The size of `unsigned int', as computed by sizeof. */
-#undef SIZEOF_UNSIGNED_INT
+/* #undef SIZEOF_UNSIGNED_INT */
 
 /* The size of `unsigned long', as computed by sizeof. */
-#undef SIZEOF_UNSIGNED_LONG
+/* #undef SIZEOF_UNSIGNED_LONG */
 
 /* The size of `unsigned short', as computed by sizeof. */
-#undef SIZEOF_UNSIGNED_SHORT
+/* #undef SIZEOF_UNSIGNED_SHORT */
 
 /* Enable S/MIME code */
-#undef SMIME
+#define SMIME /**/
 
 /* Directory where S/MIME CACerts are located */
-#undef SMIME_SSLCERTS
+#define SMIME_SSLCERTS "/etc/ssl/certs"
 
 /* Simple spell checker: reads stdin, emits misspellings on stdout */
-#undef SPELLER
+#define SPELLER "/usr/bin/hunspell -l"
+
+/* SSL Supports TLSV1.2 */
+#define SSL_SUPPORTS_TLSV1_2 1
 
 /* Define to 1 if the `S_IS*' macros in <sys/stat.h> do not work properly. */
-#undef STAT_MACROS_BROKEN
+/* #undef STAT_MACROS_BROKEN */
 
 /* Define to 1 if you have the ANSI C header files. */
-#undef STDC_HEADERS
+#define STDC_HEADERS 1
 
 /* System pinerc */
-#undef SYSTEM_PINERC
+#define SYSTEM_PINERC "/usr/local/lib/pine.conf"
 
 /* System fixed pinerc */
-#undef SYSTEM_PINERC_FIXED
+#define SYSTEM_PINERC_FIXED "/usr/local/lib/pine.conf.fixed"
 
 /* Local Support Info File */
-#undef SYSTEM_PINE_INFO_PATH
+#define SYSTEM_PINE_INFO_PATH "/usr/local/lib/pine.info"
 
 /* Pine-Centric Host Specifier */
-#undef SYSTYPE
+#define SYSTYPE "LSU"
 
 /* Define if system supports SYSV signal interface */
-#undef SYSV_SIGNALS
+/* #undef SYSV_SIGNALS */
 
 /* File name separator as string constant */
-#undef S_FILESEP
+#define S_FILESEP "/"
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
-#undef TIME_WITH_SYS_TIME
+#define TIME_WITH_SYS_TIME 1
 
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
-#undef TM_IN_SYS_TIME
+/* #undef TM_IN_SYS_TIME */
 
 /* Default configuration value */
-#undef TRASH_FOLDER
+#define TRASH_FOLDER "Trash"
 
 /* System defined unsigned 16 bit integer */
-#undef UINT16
+#define UINT16 uint16_t
 
 /* System defined unsigned 32 bit integer */
-#undef UINT32
+#define UINT32 uint32_t
 
 /* Compile in quota check on startup */
-#undef USE_QUOTAS
+/* #undef USE_QUOTAS */
 
 /* Version number of package */
-#undef VERSION
+#define VERSION "2.20"
 
 /* Windows is just too different */
-#undef _WINDOWS
+/* #undef _WINDOWS */
 
 /* Enable extended pthread features on Solaris */
-#undef __EXTENSIONS__
+/* #undef __EXTENSIONS__ */
 
 /* Define to `int' if <sys/types.h> doesn't define. */
-#undef gid_t
+/* #undef gid_t */
 
 /* Define to `int' if <sys/types.h> does not define. */
-#undef mode_t
+/* #undef mode_t */
 
 /* Define to `int' if <sys/types.h> does not define. */
-#undef pid_t
+/* #undef pid_t */
 
 /* qsort compare function argument type */
-#undef qsort_t
+#define qsort_t void
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
-#undef size_t
+/* #undef size_t */
 
 /* Define to `int' if <sys/types.h> doesn't define. */
-#undef uid_t
+/* #undef uid_t */
 
 /* Define as `fork' if `vfork' does not work. */
-#undef vfork
+/* #undef vfork */

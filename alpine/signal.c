@@ -4,7 +4,7 @@ static char rcsid[] = "$Id: signal.c 1025 2008-04-08 22:59:38Z hubert@u.washingt
 
 /* ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -188,7 +188,7 @@ auger_in_signal(int sig)
     snprintf(buf, sizeof(buf), "Received abort signal(sig=%d)", sig);
     buf[sizeof(buf)-1] = '\0';
 
-    panic(buf);				/* clean up and get out */
+    alpine_panic(buf);				/* clean up and get out */
 
     exit(-1);				/* in case panic doesn't kill us */
 }
@@ -591,8 +591,10 @@ pipe_callback(PIPE_S *syspipe, int flags, void *data)
 	    ps_global->mangled_screen = 1;
 	}
 
-	if(syspipe->mode & PIPE_RESET)
+	if(syspipe->mode & PIPE_RESET){
 	  ttyfix(1);
+	  ps_global->mangled_screen = 1;
+	}
 
 #ifdef	SIGCHLD
 	(void) signal(SIGCHLD,  SIG_DFL);
@@ -644,8 +646,10 @@ pipe_callback(PIPE_S *syspipe, int flags, void *data)
 #endif
     }
     else if(flags & OSB_POST_CLOSE){
-	if(syspipe->mode & PIPE_RESET)		/* restore our tty modes */
+	if(syspipe->mode & PIPE_RESET){		/* restore our tty modes */
 	  ttyfix(1);
+	  ps_global->mangled_screen = 1;
+	}
 
 	if(!(syspipe->mode & (PIPE_WRITE | PIPE_READ | PIPE_SILENT))){
 	    ClearScreen();			/* No I/O to forked child */

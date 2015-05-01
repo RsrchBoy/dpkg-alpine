@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: mimetype.c 955 2008-03-06 23:52:36Z hubert@u.washing
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -176,7 +176,7 @@ mt_srch_mime_type(MT_OPERATORPROC mt_operator, MT_MAP_T *mt_map)
 	    }
 	}
 	else
-	  panic("Unhandled mime type search");
+	  alpine_panic("Unhandled mime type search");
     }
 
     /* if we still can not find the type, but it is a .docx (or alike) extension

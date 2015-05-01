@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: reply.c 1074 2008-06-04 00:08:43Z hubert@u.washingto
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -280,7 +280,7 @@ reply(struct pine *pine_state, ACTION_S *role_arg)
 	     * if reply to more than one message, and all subjects
 	     * match, so be it.  otherwise set it to something generic...
 	     */
-	    if(strucmp(outgoing->subject,
+	    if(!same_subject(outgoing->subject,
 		       reply_subject(env->subject,tmp_20k_buf,SIZEOF_20KBUF))){
 		fs_give((void **)&outgoing->subject);
 		outgoing->subject = cpystr("Re: several messages");
@@ -1847,7 +1847,11 @@ bounce(struct pine *pine_state, ACTION_S *role)
 
     if(mn_total_cur(pine_state->msgmap) > 1L){
 	save_toptr = &save_to;
-	snprintf(tmp_20k_buf, SIZEOF_20KBUF, _("BOUNCE (redirect) %ld messages to : "),
+	if(role)
+	  snprintf(tmp_20k_buf, SIZEOF_20KBUF, _("BOUNCE (redirect) %ld messages (using role %s) to : "),
+		mn_total_cur(pine_state->msgmap), role->nick);
+	else
+	  snprintf(tmp_20k_buf, SIZEOF_20KBUF, _("BOUNCE (redirect) %ld messages to : "),
 		mn_total_cur(pine_state->msgmap));
 	tmp_20k_buf[SIZEOF_20KBUF-1] = '\0';
 	prmpt_who = cpystr(tmp_20k_buf);

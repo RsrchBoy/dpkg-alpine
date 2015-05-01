@@ -3,7 +3,7 @@
  *
  * ========================================================================
  * Copyright 2006-2007 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ void	   cmd_cancelled(char *);
 void	   cmd_quota(struct pine *);
 int	   cmd_delete(struct pine *, MSGNO_S *, int, char *(*)(struct pine *, MSGNO_S *));
 int	   cmd_undelete(struct pine *, MSGNO_S *, int);
-int	   cmd_expunge_work(MAILSTREAM *, MSGNO_S *);
+int	   cmd_expunge_work(MAILSTREAM *, MSGNO_S *, char *);
 CONTEXT_S *broach_get_folder(CONTEXT_S *, int *, char **);
 int	   do_broach_folder(char *, CONTEXT_S *, MAILSTREAM **, unsigned long);
 void	   expunge_and_close(MAILSTREAM *, char **, unsigned long);

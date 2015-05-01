@@ -1,4 +1,18 @@
 /* ========================================================================
+ * Copyright 2008-2011 Mark Crispin   
+ * ========================================================================
+ */
+
+/*
+ * Program:	Post Office Protocol 3 (POP3) client routines
+ *
+ * Author:	Mark Crispin
+ *
+ * Date:	6 June 1994
+ * Last Edited:	8 April 2011
+ *
+ * Previous versions of this file were:
+ *
  * Copyright 1988-2007 University of Washington
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -7,23 +21,6 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * 
- * ========================================================================
- */
-
-/*
- * Program:	Post Office Protocol 3 (POP3) client routines
- *
- * Author:	Mark Crispin
- *		Networks and Distributed Computing
- *		Computing & Communications
- *		University of Washington
- *		Administration Building, AG-44
- *		Seattle, WA  98195
- *		Internet: MRC@CAC.Washington.EDU
- *
- * Date:	6 June 1994
- * Last Edited:	4 April 2007
  */
 
 
@@ -265,7 +262,7 @@ void pop3_list (MAILSTREAM *stream,char *ref,char *pat)
 void pop3_lsub (MAILSTREAM *stream,char *ref,char *pat)
 {
   void *sdb = NIL;
-  char *s,mbx[MAILTMPLEN];
+  char *s,mbx[MAILTMPLEN],tmp[MAILTMPLEN];
   if (*pat == '{') {		/* if remote pattern, must be POP3 */
     if (!pop3_valid (pat)) return;
     ref = NIL;			/* good POP3 pattern, punt reference */
@@ -276,9 +273,10 @@ void pop3_lsub (MAILSTREAM *stream,char *ref,char *pat)
   if (ref && *ref) sprintf (mbx,"%s%s",ref,pat);
   else strcpy (mbx,pat);
 
-  if (s = sm_read (&sdb)) do if (pop3_valid (s) && pmatch (s,mbx))
+  if (s = sm_read (tmp,&sdb)) do if (pop3_valid (s) && pmatch (s,mbx))
     mm_lsub (stream,NIL,s,NIL);
-  while (s = sm_read (&sdb));	/* until no more subscriptions */
+				/* until no more subscriptions */
+  while (s = sm_read (tmp,&sdb));
 }
 
 
@@ -423,6 +421,10 @@ MAILSTREAM *pop3_open (MAILSTREAM *stream)
 	       net_port (LOCAL->netstream));
       if (mb.tlsflag) strcat (tmp,"/tls");
       if (mb.tlssslv23) strcat (tmp,"/tls-sslv23");
+      if (mb.tls1) strcat (tmp,"/tls1");
+      if (mb.tls1_1) strcat (tmp,"/tls1_1");
+      if (mb.tls1_2) strcat (tmp,"/tls1_2");
+      if (mb.dtls1) strcat (tmp,"/dtls1");
       if (mb.notlsflag) strcat (tmp,"/notls");
       if (mb.sslflag) strcat (tmp,"/ssl");
       if (mb.novalidate) strcat (tmp,"/novalidate-cert");
@@ -567,8 +569,7 @@ long pop3_auth (MAILSTREAM *stream,NETMBX *mb,char *pwd,char *usr)
     LOCAL->netstream->dtb = ssld;
     if (!(LOCAL->netstream->stream =
 	  (*stls) (LOCAL->netstream->stream,mb->host,
-		   (mb->tlssslv23 ? NIL : NET_TLSCLIENT) |
-		   (mb->novalidate ? NET_NOVALIDATECERT : NIL)))) {
+		   SSL_MTHD(*mb) | (mb->novalidate ? NET_NOVALIDATECERT : NIL)))) {
 				/* drat, drop this connection */
       if (LOCAL->netstream) net_close (LOCAL->netstream);
       LOCAL->netstream= NIL;

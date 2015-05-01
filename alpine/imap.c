@@ -4,8 +4,8 @@ static char rcsid[] = "$Id: imap.c 1266 2009-07-14 18:39:12Z hubert@u.washington
 
 /*
  * ========================================================================
+ * Copyright 2013-2015 Eduardo Chappa
  * Copyright 2006-2009 University of Washington
- * Copyright 2013 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1010,7 +1010,7 @@ mm_login_work(NETMBX *mb, char *user, char *pwd, long int trial,
 		      (mb->sslflag||mb->tlsflag), 0, 0);
 #ifdef	LOCAL_PASSWD_CACHE
     /* if requested, remember it on disk for next session */
-    if(save_password)
+      if(save_password && F_OFF(F_DISABLE_PASSWORD_FILE_SAVING,ps_global))
       set_passfile_passwd(ps_global->pinerc, pwd,
 		        altuserforcache ? altuserforcache : user, hostlist,
 			(mb->sslflag||mb->tlsflag),
@@ -1246,8 +1246,8 @@ pine_tcptimeout(long int elapsed, long int sincelast, char *host)
 
     ps_global->tcptimeout = 1;
 #ifdef	DEBUG
-    dprint((1, "tcptimeout: waited %s seconds\n",
-	       long2string(elapsed)));
+    dprint((1, "tcptimeout: waited %s seconds, server: %s\n",
+	       long2string(elapsed), host));
     if(debugfile)
       fflush(debugfile);
 #endif
@@ -1842,7 +1842,7 @@ answer_cert_failure(int cmd, MSGNO_S *msgmap, SCROLL_S *sparms)
 	break;
 
       default:
-	panic("Unexpected command in answer_cert_failure");
+	alpine_panic("Unexpected command in answer_cert_failure");
 	break;
     }
 
@@ -2041,7 +2041,6 @@ passfile_name(char *pinerc, char *path, size_t len)
 	return(NULL);
 #endif
 }
-
 #endif	/* PASSFILE */
 
 
@@ -2051,25 +2050,20 @@ passfile_name(char *pinerc, char *path, size_t len)
 int 
 line_get(char *tmp, size_t len, char **textp)
 {
-  char *s, c;
+  char *s;
 
   tmp[0] = '\0';
-  if (*textp == NULL)
+  if (*textp == NULL || strlen(*textp) >= len - 1
+	|| (s = strchr(*textp, '\n')) == NULL)
     return 0;
-  s = strchr(*textp, '\n');
-  if(s != NULL){
-     *s = '\0';
-     if(*(s-1) == '\r')
-	*(s-1) = '\0';
-     if(strlen(*textp) < len - 1)
-	strcpy(tmp, *textp);
-     else
-	return 0;
-     strcat(tmp, "\n");
-     *textp = s+1;
-  }
-  else
-     return 0;
+
+  *s = '\0';
+  if(*(s-1) == '\r')
+    *(s-1) = '\0';
+
+  snprintf(tmp, len, "%s\n", *textp);
+  tmp[len-1] = '\0';
+  *textp = s+1;
 
   return 1;
 }
@@ -2379,17 +2373,29 @@ read_passfile(pinerc, l)
     };
 
 #ifdef SMIME
+    /* the next call initializes the key/certificate pair used to
+     * encrypt and decrypt a password file. The details of how this is
+     * done is in the file pith/smime.c. During this setup we might call
+     * smime_init(), but no matter what happens we must call smime_deinit()
+     * there. The reason why this is so is because we can not assume that 
+     * the .pinerc file has been read by this time, so this code might not
+     * know about the ps_global->smime structure or any of its components,
+     * and it shouldn't because it only needs ps_global->pwdcert, so 
+     * do not init smime here, because the .pinerc might not have been
+     * read and we do not really know where the keys and certificates really
+     * are.
+     */
+    if(ps_global->pwdcert == NULL)
+       setup_pwdcert(&ps_global->pwdcert);
     tmp2[0] = '\0';
     fgets(tmp2, sizeof(tmp2), fp);
+    fclose(fp);
     if(strcmp(tmp2, "-----BEGIN PKCS7-----\n")){
-       fclose(fp);
-       if(encrypt_file(tmp, NULL))
+       if(encrypt_file((char *)tmp, NULL, (PERSONAL_CERT *)ps_global->pwdcert))
 	  encrypted++;
     }
-    else{
-       fclose(fp);
+    else
        encrypted++;
-    }
 
     /* 
      * if password file is encrypted we attemtp to decrypt. We ask the 
@@ -2404,7 +2410,7 @@ read_passfile(pinerc, l)
      * unencrypted and rewritten again.
      */
     if(encrypted){
-	text = text2 = decrypt_file(tmp, &i);
+	text = text2 = decrypt_file((char *)tmp, &i, (PERSONAL_CERT *)ps_global->pwdcert);
 	switch(i){
 	   case 1 : save_password = 1;
 		    break;
@@ -2602,7 +2608,8 @@ write_passfile(pinerc, l)
     }
 
 #ifdef SMIME
-    strcpy(tmp2, tmp);
+   strncpy(tmp2, tmp, sizeof(tmp2)-1);
+   tmp2[sizeof(tmp2)-1] = '\0';
 #endif /* SMIME */
 
     for(n = 0; l; l = l->next, n++){
@@ -2627,7 +2634,7 @@ write_passfile(pinerc, l)
 	   len = strlen(text) + strlen(tmp) + 1;
 	   fs_resize((void **)&text, len*sizeof(char));
 	}
-	strcat(text, tmp);
+	strncat(text, tmp, strlen(tmp));
 #else /* SMIME */
 	fputs(tmp, fp);
 #endif /* SMIME */
@@ -2635,13 +2642,15 @@ write_passfile(pinerc, l)
 
     fclose(fp);
 #ifdef SMIME
-    if(encrypt_file(tmp2, text) == 0){
-	if((fp = our_fopen(tmp2, "wb")) != NULL){
+    if(text != NULL){
+       if(encrypt_file((char *)tmp2, text, ps_global->pwdcert) == 0){
+	 if((fp = our_fopen(tmp2, "wb")) != NULL){
 	   fputs(text, fp);
 	   fclose(fp);
-	}
+	 }
+       }
+       fs_give((void **)&text);
     }
-    fs_give((void **)&text);
 #endif /* SMIME */
 #endif /* PASSFILE */
 }
@@ -2773,6 +2782,7 @@ preserve_prompt(void)
     }
     return(0);
 #else /* PASSFILE */
+if(F_OFF(F_DISABLE_PASSWORD_FILE_SAVING,ps_global))
     return(want_to(_("Preserve password on DISK for next login"), 
 		   'y', 'x', NO_HELP, WT_NORM)
 	   == 'y');
@@ -2944,7 +2954,6 @@ update_passfile_hostlist(pinerc, user, hostlist, altflag)
     return;
 #else /* !WINCRED */
     MMLOGIN_S *l;
-    STRLIST_S *h1, *h2;
     
     for(l = passfile_cache; l; l = l->next)
       if(imap_same_host(l->hosts, hostlist)

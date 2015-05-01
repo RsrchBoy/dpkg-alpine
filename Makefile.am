@@ -12,7 +12,7 @@
 #
 # ========================================================================
 
-EXTRA_DIST = config.rpath  VERSION README LICENSE
+EXTRA_DIST = config.rpath VERSION README LICENSE
 
 SUBDIRS = m4 po $(REGEX_BUILD) pith pico alpine $(WEB_PUBCOOKIE_BUILD) $(WEB_BUILD)
 
@@ -37,4 +37,4 @@ clean-local:
 
 man_MANS = doc/alpine.1 doc/pico.1 doc/pilot.1 doc/rpdump.1 doc/rpload.1
 
-ACLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = --install -I m4

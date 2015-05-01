@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: msgno.c 854 2007-12-07 17:44:43Z hubert@u.washington
 /*
  * ========================================================================
  * Copyright 2006-2007 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -252,7 +252,7 @@ msgno_dec(MAILSTREAM *stream, MSGNO_S *msgs, int flags)
 	    f -- flags to use a purge criteria
   ----*/
 void
-msgno_exclude_deleted(MAILSTREAM *stream, MSGNO_S *msgs)
+msgno_exclude_deleted(MAILSTREAM *stream, MSGNO_S *msgs, char *sequence)
 {
     long	  i, rawno;
     MESSAGECACHE *mc;
@@ -270,6 +270,9 @@ msgno_exclude_deleted(MAILSTREAM *stream, MSGNO_S *msgs)
      */
     (void) count_flagged(stream, F_DEL);
 
+    if(sequence)
+	mail_sequence (stream,sequence);
+
     /*
      * Start with the end of the folder and work backwards so that
      * msgno_exclude doesn't have to shift the entire array each time when
@@ -281,6 +284,7 @@ msgno_exclude_deleted(MAILSTREAM *stream, MSGNO_S *msgs)
     for(i = msgs->max_msgno; i >= 1L; i--)
       if((rawno = mn_m2raw(msgs, i)) > 0L && stream && rawno <= stream->nmsgs
 	 && (mc = mail_elt(stream, rawno))
+	 && (sequence ? mc->sequence : 1)
 	 && ((mc->valid && mc->deleted) || (!mc->valid && mc->searched))){
 	  msgno_exclude(stream, msgs, i, 0);
 	  need_isort_reset++;

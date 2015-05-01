@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: confscroll.c 1169 2008-08-27 06:42:06Z hubert@u.wash
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1552,6 +1552,10 @@ text_toolit(struct pine *ps, int cmd, CONF_S **cl, unsigned int flags, int look_
 	    lowrange = 1;
 	    hirange  = MAX_FILLCOL;
 	}
+	else if((*cl)->var == &ps->vars[V_SLEEP]){
+	    lowrange = 60;
+	    hirange  = 600;
+	}
 	else if((*cl)->var == &ps->vars[V_OVERLAP]
 		|| (*cl)->var == &ps->vars[V_MARGIN]){
 	    lowrange = 0;
@@ -3038,6 +3042,8 @@ update_option_screen(struct pine *ps, OPT_SCREEN_S *screen, Pos *cursor_pos)
     if(screen == NULL || BODY_LINES(ps) < 1)
        return;
 
+    opt_screen = screen;
+
     if(cursor_pos){
 	cursor_pos->col = 0;
 	cursor_pos->row = -1;		/* to tell us if we've set it yet */
@@ -3143,7 +3149,7 @@ update_option_screen(struct pine *ps, OPT_SCREEN_S *screen, Pos *cursor_pos)
 	    }
 
 	    value = (ctmp->flags & CF_INHERIT) ? INHERIT : ctmp->value;
-	    dprint((1, "value = %s", ctmp->value));
+
 	    if(value){
 		char *p;
 		int   i, j;
@@ -3679,7 +3685,6 @@ update_option_screen(struct pine *ps, OPT_SCREEN_S *screen, Pos *cursor_pos)
 			}
 		    }
 		    else{
-			dprint((1, "value = %s, tmp_20k = %s", ctmp->value, tmp_20k_buf));
 			w = utf8_width(tmp_20k_buf);
 			want_width = ps->ttyo->screen_cols - ctmp->valoffset; 
 			if(w > want_width){
@@ -4608,6 +4613,14 @@ toggle_feature_bit(struct pine *ps, int index, struct variable *var, CONF_S *cl,
 	  ps->pass_ctrl_chars = F_ON(F_PASS_CONTROL_CHARS,ps_global) ? 1 : 0;
 	  break;
 
+#ifdef SMIME
+	case F_USE_CERT_STORE_ONLY:
+	  if(F_OFF(F_USE_CERT_STORE_ONLY, ps))
+	  q_status_message(SM_ORDER | SM_DING, 3, 4,
+	  "Disabling this feature should only be done for testing. Press \"?\" for help");
+	  break;
+#endif /* SMIME */
+
 	case F_PASS_C1_CONTROL_CHARS :
 	  ps->pass_c1_ctrl_chars = F_ON(F_PASS_C1_CONTROL_CHARS,ps_global) ? 1 : 0;
 	  break;
@@ -5215,6 +5228,16 @@ fix_side_effects(struct pine *ps, struct variable *var, int revert)
 	else
 	  ps->viewer_overlap = old_value;
     }
+    else if(var == &ps->vars[V_SLEEP]){
+	int old_value = ps->sleep;
+
+	if(SVAR_SLEEP(ps, old_value, tmp_20k_buf, SIZEOF_20KBUF)){
+	    if(!revert)
+	      q_status_message(SM_ORDER, 3, 5, tmp_20k_buf);
+	}
+	else
+	  ps->sleep = old_value;
+    }
 #ifdef	SMIME
     else if(smime_related_var(ps, var)){
 	smime_deinit();
@@ -5243,7 +5266,7 @@ fix_side_effects(struct pine *ps, struct variable *var, int revert)
 	}
 	else{
 	    if(reset_character_set_stuff(&err) == -1)
-	      panic(err ? err : "trouble with Character-Set");
+	      alpine_panic(err ? err : "trouble with Character-Set");
 	    else if(err){
 		q_status_message(SM_ORDER | SM_DING, 3, 5, err);
 		fs_give((void **) &err);
@@ -5259,7 +5282,7 @@ fix_side_effects(struct pine *ps, struct variable *var, int revert)
 	}
 	else{
 	    if(reset_character_set_stuff(&err) == -1)
-	      panic(err ? err : "trouble with Character-Set");
+	      alpine_panic(err ? err : "trouble with Character-Set");
 	    else if(err){
 		q_status_message(SM_ORDER | SM_DING, 3, 5, err);
 		fs_give((void **) &err);

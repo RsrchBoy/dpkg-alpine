@@ -448,19 +448,19 @@
 #define PACKAGE "alpine"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "alpine-contact@u.washington.edu"
+#define PACKAGE_BUGREPORT "chappa@gmx.com"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "alpine"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "alpine 2.11"
+#define PACKAGE_STRING "alpine 2.20"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "alpine"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.11"
+#define PACKAGE_VERSION "2.20"
 
 /* Program users use to change their password */
 /* #undef PASSWD_PROG */
@@ -552,7 +552,7 @@
 #define UTF8_INTERNAL
 
 /* Version number of package */
-#define VERSION "2.11"
+#define VERSION "2.20"
 
 /* Windows is just too different */
 #ifndef _WINDOWS

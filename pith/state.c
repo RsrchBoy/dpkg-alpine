@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: state.c 1074 2008-06-04 00:08:43Z hubert@u.washingto
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -178,6 +178,17 @@ free_pine_struct(struct pine **pps)
 #ifdef PASSFILE
     if((*pps)->passfile)
       fs_give((void **)&(*pps)->passfile);
+#ifdef SMIME
+    if((*pps)->pwdcert){
+      PERSONAL_CERT *pc;
+
+      pc = (PERSONAL_CERT *) (*pps)->pwdcert;
+      free_personal_certs(&pc);
+      (*pps)->pwdcert = NULL;
+    }
+    if((*pps)->pwdcertdir)
+      fs_give((void **)&(*pps)->pwdcertdir);
+#endif /* SMIME inside PASSFILE */
 #endif /* PASSFILE */
 
     if((*pps)->hdr_colors)

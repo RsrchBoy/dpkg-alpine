@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 dnl /* ========================================================================
-dnl  * Copyright 2013 Eduardo Chappa
+dnl  * Copyright 2013-2015 Eduardo Chappa
 dnl  * Copyright 2006-2008 University of Washington
 dnl  *
 dnl  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@ dnl  */
 
 AC_PREREQ([2.69])
 
-AC_REVISION([Rev:2 by chappa@washington.edu])
+AC_REVISION([Rev:15 by chappa@washington.edu])
 
 dnl Alpine Version Number is in $srcdir/VERSION
 AC_INIT([alpine],[m4_normalize(m4_include(VERSION))],[chappa@washington.edu])
@@ -46,11 +46,13 @@ AC_PROG_LN_S
 AC_PROG_AWK
 AC_PROG_RANLIB
 LT_INIT
+AC_SUBST([LIBTOOL_DEPS])
 
 AC_PATH_PROG(AR, ar, ar)
 AC_PATH_PROG(RM, rm, rm)
 AC_PATH_PROG(CP, cp, cp)
 AC_PATH_PROG(LN, ln, ln)
+AC_PATH_PROG(LS, ls, ls)
 AC_PATH_PROG(SED, sed, sed)
 AC_PATH_PROG(MAKE, make)
 
@@ -74,7 +76,7 @@ AC_ARG_WITH(dmalloc-dir,
   [
     if test "x$withval" != "xno" ; then
       enable_dmalloc = "yes"
-      CPPFLAGS="$CPPCFLAGS -I${withval}"
+      CPPFLAGS="$CPPFLAGS -I${withval}"
       LDFLAGS="$LDFLAGS -L${withval}"
     fi
   ])
@@ -83,7 +85,55 @@ if test x$enable_dmalloc = "xyes" ; then
   AC_DEFINE(ENABLE_DMALLOC, 1, [Define enable dmalloc debugging])
 fi
 
-localedir="\${datadir}/locale"
+dnl set ps command, this test is fragile, but it should mostly work
+ALPINE_psefcmd="/bin/ps auxww"
+ALPINE_psfailed="0"
+ALPINE_PSTEST="-"
+AC_ARG_WITH(ps-cmd,
+  AS_HELP_STRING([--with-ps-cmd="CMD"],[Use this command to check running commands. Default: /bin/ps auxww]),
+  [
+    if test "x$withval" = "xno" -o "x$withval" = "xyes" -o "x$withval" = "x" ; then
+	withval=$ALPINE_psefcmd
+    fi
+    ALPINE_PSTEST=`$withval | $EGREP "$withval" | $EGREP -v $EGREP`
+    if test -n "$ALPINE_PSTEST" ; then
+       ALPINE_psefcmd="$withval"
+    else
+       ALPINE_psfailed="1"
+       if test "x$ALPINE_psefcmd" != "x$withval" ; then
+          AC_MSG_WARN(failed command $withval. Trying $ALPINE_psefcmd)
+       fi
+    fi
+  ])
+if test "$ALPINE_psfailed" = "1" -o "$ALPINE_PSTEST" = "-" ; then
+   withval="$ALPINE_psefcmd"
+   ALPINE_PSTEST=`$withval | $EGREP "$withval" | $EGREP -v $EGREP`
+   if test -z "$ALPINE_PSTEST" ; then
+      ALPINE_psfailed="1"
+   else
+      ALPINE_psfailed="0"
+   fi
+fi
+if test "$ALPINE_psfailed" = "0" ; then
+  AC_DEFINE_UNQUOTED([PSEFCMD], "$ALPINE_psefcmd", [ps command which outputs list of running commands])
+fi
+
+dnl Set default locale dir.
+case $host in
+    *apple-darwin*)
+      if test -d /opt/local ; then
+	localedir="/opt/local/share/locale"
+      else
+	localedir="\${datadir}/locale"
+      fi
+      ;;
+    *-*-cygwin)
+	localedir="/usr/share"
+      ;;
+    *)  
+      localedir="\${datadir}/locale"
+      ;;
+esac
 AC_ARG_WITH(localedir,
   AS_HELP_STRING([--with-localedir=DIR],[Name of gettext locale directory]),
   [
@@ -581,9 +631,13 @@ PINEVAR(smime-private-key-directory, DF_PRIVATEKEY_DIR, [.alpine-smime/private],
 PINEVAR(smime-cacert-directory, DF_CACERT_DIR, [.alpine-smime/ca], [Default Cert Authority Directory])
 PINEVAR_UNQUOTED(default-printer, DF_DEFAULT_PRINTER, [ANSI_PRINTER], [Default printer])
 
+AC_DEFINE_UNQUOTED([DF_PUBLIC_CONTAINER], "PublicContainer", [Name of default public container])
+AC_DEFINE_UNQUOTED([DF_PRIVATE_CONTAINER], "PrivateContainer", [Name of default private container])
+AC_DEFINE_UNQUOTED([DF_CA_CONTAINER], "CAContainer", [Name of default certificate authority container])
+
 dnl set PASSFILE?
 AC_ARG_WITH(passfile,
-  AS_HELP_STRING([--with-passfile=FILENAME],[Password cache file (NOT secure, NOT recommended)]),
+  AS_HELP_STRING([--with-passfile=FILENAME],[Password cache file (recommended when S/MIME is enabled and configured)]),
     [
       case "$withval" in
 	no)
@@ -595,6 +649,7 @@ AC_ARG_WITH(passfile,
 	  ;;
       esac
     ])
+
 
 dnl os-specific credential cache?
 AC_ARG_WITH(local-password-cache,
@@ -619,7 +674,7 @@ if test -n "$alpine_PASSFILE" ; then
       AC_MSG_NOTICE([--with-passfile definition overrides OS-Specific password caching])
       ;;
   esac
-  AC_DEFINE_UNQUOTED([PASSFILE], "$alpine_PASSFILE", [Password cache file (NOT secure. NOT recommended)])
+  AC_DEFINE_UNQUOTED([PASSFILE], "$alpine_PASSFILE", [Password cache file (recommended if S/MIME is enabled and configured)])
 fi
 
 dnl set DF_SSHPATH?
@@ -660,10 +715,15 @@ AC_ARG_WITH(ssl,
 
 if test "x$with_ssl" = "xno" ; then
   alpine_SSLTYPE="none"
+elif test -d /usr/local/ssl ; then
+dnl When the system has openssl installed in its default location
+dnl instead of the one used by the distribution assume that this
+dnl is the one intended to be used.
+  alpine_SSLDIR="/usr/local/ssl"
 else
   dnl preload c-client default locations/options
   case $host in
-    *-linux-gnu*)
+    *-linux-gnu*|*-k*bsd*-gnu*|*-gnu*)
       if test -f /etc/fedora-release -o -f /etc/redhat-release -o -f /etc/redhat_version ; then  
         alpine_SSLTYPE="nopwd"
 	if test -d /etc/pki/tls ; then  
@@ -671,14 +731,37 @@ else
 	else
 	  alpine_SSLDIR="/usr/share/ssl"
 	fi
+	alpine_SSLCERTS="$alpine_SSLDIR/certs"
+	alpine_SSLKEYS="$alpine_SSLDIR/private"
+	alpine_SSLINCLUDE="/usr/include/openssl" 
+	alpine_SSLLIB="/usr/lib"
+      elif test -f /etc/mandrake-release ; then
+	alpine_SSLDIR="/usr/lib/ssl"
+	alpine_SSLCERTS="$alpine_SSLDIR/certs" 
+	alpine_SSLKEYS="$alpine_SSLDIR/private"
+	alpine_SSLINCLUDE="/usr/include/openssl" 
+	alpine_SSLLIB="/usr/lib"
       elif test -f /etc/SuSE-release ; then
         alpine_SSLTYPE="nopwd"
-        alpine_SSLDIR="/usr/share/ssl"
-        alpine_SSLCERTS="/etc/ssl/certs"
+        alpine_SSLDIR="/etc/ssl"
+        alpine_SSLCERTS="$alpine_SSLDIR/certs"
+	alpine_SSLKEYS="$alpine_SSLDIR/private"
+	alpine_SSLINCLUDE="/usr/include/openssl" 
+	alpine_SSLLIB="/usr/lib"
       elif test -d /etc/osso-af-init ; then
         alpine_SSLTYPE="nopwd"
         alpine_SSLDIR="/usr"
         alpine_SSLCERTS="/usr/share/certs"
+	alpine_SSLINCLUDE="/usr/include/openssl"
+	alpine_SSLLIB="/usr/lib"
+      elif test -f /etc/debian_release -o -f /etc/debian_version ; then
+        if test ! -d /etc/osso-af-init ; then
+	   alpine_SSLDIR="/etc/ssl"
+	   alpine_SSLCERTS="$alpine_SSLDIR/certs"
+	   alpine_SSLKEYS="$alpine_SSLDIR/private"
+	   alpine_SSLINCLUDE="/usr/include/openssl" 
+	   alpine_SSLLIB="/usr/lib"
+        fi
       else
         alpine_SSLTYPE="nopwd"
         alpine_SSLDIR="/usr"
@@ -687,16 +770,86 @@ else
       ;;
     *-apple-darwin*)
       alpine_SSLTYPE="nopwd"
-      alpine_SSLCERTS="/System/Library/OpenSSL/certs"
+dnl Originally this is where certs are, and they might still be there, even
+dnl after installing Homebrew, MacPorts or Fink. We will use it if we cannot
+dnl find it anywhere else.
+      alpine_SSLCERTS_ORIG="/System/Library/OpenSSL/certs"
+      if test -d /usr/local/opt/openssl ; then
+	alpine_SSLDIR="/usr/local/opt/openssl"
+	alpine_SSLINCLUDE="$alpine_SSLDIR/include"
+	alpine_SSLLIB="$alpine_SSLDIR/lib"
+	alpine_SSLCERTS="/usr/local/etc/openssl"
+	alpine_SSLKEYS="$alpine_SSLDIR/private"
+      elif test -d /opt/local/etc/openssl ; then
+	alpine_SSLDIR="/opt/local"
+	alpine_SSLINCLUDE="$alpine_SSLDIR/include"
+	alpine_SSLLIB="$alpine_SSLDIR/lib"
+	alpine_SSLCERTS="/opt/local/etc/openssl/certs"
+	alpine_SSLKEYS="/opt/local/etc/openssl/private"
+      elif test -d /sw/etc/ssl ; then
+	alpine_SSLDIR="/sw/etc/ssl"
+	alpine_SSLINCLUDE="/sw/include"
+	alpine_SSLLIB="/sw/lib"
+	alpine_SSLCERTS="/sw/etc/ssl/certs"
+	alpine_SSLKEYS="/sw/etc/ssl/private"
+      elif test -d /usr/local/ssl ; then
+	alpine_SSLDIR="/usr/local/ssl"
+      elif test -d /System/Library/OpenSSL ; then
+	alpine_SSLDIR="/System/Library/OpenSSL"
+        alpine_SSLCERTS="$alpine_SSLDIR/certs"
+	alpine_SSLKEYS="$alpine_SSLDIR/private"
+	alpine_SSLLIB="/usr/lib"
+	alpine_SSLINCLUDE="/usr/include/openssl"
+      fi
+      ;;
+    *-*-netbsd*)
+	alpine_SSLDIR="/etc/openssl"
+	alpine_SSLCERTS="$alpine_SSLDIR/certs"
+	alpine_SSLKEYS="$alpine_SSLDIR/private"
+	alpine_SSLINCLUDE="/usr/include/openssl"
+	alpine_SSLLIB="/usr/lib"
+      ;;
+    *-*-dragonfly*)
+	alpine_SSLDIR="/etc/openssl"
+	alpine_SSLCERTS="$alpine_SSLDIR/certs"
+	alpine_SSLKEYS="$alpine_SSLDIR/private"
+	alpine_SSLINCLUDE="/usr/include/openssl"
+	alpine_SSLLIB="/usr/lib"
       ;;
     *-openbsd*)
-      alpine_SSLTYPE="nopwd"
-      alpine_SSLDIR="/usr"
-      alpine_SSLCERTS="/etc/ssl/certs"
+	alpine_SSLTYPE="nopwd"
+	alpine_SSLDIR="/usr"
+	alpine_SSLCERTS="/etc/ssl/certs"
+      ;;
+    *-*-freebsd*)
+	alpine_SSLDIR="/etc/ssl"
+	alpine_SSLCERTS="$alpine_SSLDIR/certs"
+	alpine_SSLKEYS="$alpine_SSLDIR/private"
+	if test -d /usr/local/include/openssl ; then
+	  alpine_SSLINCLUDE="/usr/local/include/openssl" 
+	  alpine_SSLLIB="/usr/local/lib"
+	else
+	  alpine_SSLINCLUDE="/usr/include/openssl" 
+	  alpine_SSLLIB="/usr/lib"
+	fi
+      ;;
+    *-*-openbsd*)
+	alpine_SSLDIR="/etc/ssl"
+	alpine_SSLINCLUDE="/usr/include/openssl"
+	alpine_SSLLIB="/usr/lib"
+	alpine_SSLCERTS="/etc/ssl" 
+	alpine_SSLKEYS="/etc/ssl/private"
+      ;;
+    *-*-cygwin)
+	alpine_SSLDIR="/usr/ssl"
+	alpine_SSLCERTS="$alpine_SSLDIR/certs" 
+	alpine_SSLKEYS="$alpine_SSLDIR/certs"
+	alpine_SSLINCLUDE="/usr/include/openssl" 
+	alpine_SSLLIB="/usr/lib"
       ;;
     *-sco-sysv* | *-sysv*UnixWare | *-sysv*OpenUNIX)
-      alpine_SSLTYPE="sco.nopwd"
-      alpine_SSLDIR=/usr/local/ssl
+	alpine_SSLTYPE="sco.nopwd"
+	alpine_SSLDIR="/usr/local/ssl"
       ;;
     *-*-solaris*)
       if test -d /usr/sfw/include/openssl ; then
@@ -713,7 +866,7 @@ else
       ;;
     *)
       alpine_SSLTYPE="nopwd"
-      alpine_SSLDIR=/usr/local/ssl
+      alpine_SSLDIR="/usr/local/ssl"
       ;;
   esac
 
@@ -722,6 +875,8 @@ else
     [
       if test "x$withval" != "xno" ; then
 	alpine_SSLDIR=$withval
+	alpine_SSLINCLUDE=$alpine_SSLDIR/include
+	alpine_SSLLIB=$alpine_SSLDIR/lib
       fi
     ])
 
@@ -748,9 +903,12 @@ else
 	alpine_SSLLIB=$withval
       fi
     ])
+fi
+
+if test "x$alpine_SSLTYPE" != "xnone" ; then
   dnl setup globals so tests below work
   if test -n "$alpine_SSLINCLUDE" ; then
-    CPPCFLAGS="-I$alpine_SSLINCLUDE $CPPFLAGS"
+    CPPFLAGS="-I$alpine_SSLINCLUDE $CPPFLAGS"
   elif test -n "$alpine_SSLDIR" ; then
     CPPFLAGS="-I${alpine_SSLDIR}/include $CPPFLAGS"
   fi
@@ -760,6 +918,7 @@ else
     LDFLAGS="-L${alpine_SSLDIR}/lib $LDFLAGS"
   fi
 fi
+
 
 dnl Include Kerberos?
 dnl Set GSSDIR for c-client make
@@ -851,7 +1010,7 @@ if test "x$with_tcl" = "xno" ; then
   AC_MSG_NOTICE([Excluding TCL Support, and thus Web Alpine Support])
 else
   AC_ARG_WITH(tcl-lib,
-    AS_HELP_STRING([--with-tcl-lib=LIBRARY],[Specific TCL Library, like \"tcl8.5\"]),
+    AS_HELP_STRING([--with-tcl-lib=LIBRARY],[Specific TCL Library, like \"tcl8.6\"]),
     [
       if test "x$withval" != "xno" ; then 
 	alpine_TCLLIB=$withval
@@ -900,7 +1059,7 @@ dnl Tests and assignments below are mostly to coax the appropriate
 dnl build from c-client.  Most of this will go away when c-client
 dnl adopts configure
 case "$host" in
-  *-linux-gnu*|*-k*bsd*-gnu*)
+  *-linux-gnu*|*-k*bsd*-gnu*|*-gnu*)
     alpine_path_delim="/"
     alpine_mode_readonly="(0600)"
     if test -f /etc/fedora-release ; then  
@@ -1184,6 +1343,65 @@ case $alpine_termdata in
     ;;
 esac
 
+dnl is -ldl present? if so, add it
+AC_SEARCH_LIBS([dlopen], [dl dld],, [ alpine_DL="none" ])
+if test "x$alpine_DL" = "xnone" ; then
+    AC_MSG_ERROR([No library containing dlopen found])
+    exit 1	
+fi
+
+dnl Check Openssl/LibreSSL version first
+if test "x$alpine_SSLTYPE" != "xnone" ; then
+  AC_MSG_CHECKING([Openssl library version >= 1.0.1c])
+  AC_RUN_IFELSE(
+	[AC_LANG_SOURCE([[
+#include <stdio.h>
+#include <stdlib.h>
+#if HAVE_STDINT_H
+#include <stdint.h>
+#endif /* HAVE_STDINT_H */
+#include <openssl/ssl.h>
+int main(void) {
+
+	if (OPENSSL_VERSION_NUMBER >= 0x1000003f)
+		exit(0);
+
+	exit(2);
+}
+	]])],
+	[ AC_MSG_RESULT(yes) ],
+	[ alpine_SSLTYPE="none" ])
+
+    if test "x$alpine_SSLTYPE" = "xnone" ; then
+	AC_MSG_ERROR(Install openssl version >= 1.0.1c)
+	exit 1
+    fi
+    AC_SEARCH_LIBS(TLSv1_2_client_method,ssl,
+	[ alpine_c_client_cflags="$alpine_c_client_cflags -DTLSV1_2"
+	  AC_DEFINE([SSL_SUPPORTS_TLSV1_2], [1], [SSL Supports TLSV1.2])
+	])
+fi
+
+dnl Crypto support is needed 
+if test "x$alpine_SSLTYPE" != "xnone" ; then
+  AC_SEARCH_LIBS(SSLeay,crypto,, [ alpine_CRYPTO="none" ])
+  if test "x$alpine_CRYPTO" = "xnone" ; then
+     AC_MSG_ERROR(crypto library NOT found)
+     exit 1
+  fi
+fi
+
+dnl provide SSL support?
+if test "x$alpine_SSLTYPE" != "xnone" ; then
+   AC_SEARCH_LIBS(SSL_library_init,ssl,,[ alpine_SSLTYPE="none" ])
+
+  if test "x$alpine_SSLTYPE" = "xnone" ; then
+     AC_MSG_ERROR(No library containing SSL_library_init found in your path)
+     exit 1
+  fi
+
+fi
+
 dnl provide LDAP support?
 if test "$alpine_with_ldap" = "yes" ; then
   alpine_has_ldap=
@@ -1203,7 +1421,7 @@ if test "$alpine_with_ldap" = "yes" ; then
     ])
 
   if test "$alpine_has_ldap" = "yes" ; then
-    AC_MSG_NOTICE([Including LDAP Support])
+    AC_MSG_NOTICE([* * * Including LDAP Support])
     AC_DEFINE([ENABLE_LDAP], [], [Enable LDAP query support])
 
     dnl we use deprecated functions (ldap_get_values)
@@ -1212,7 +1430,7 @@ if test "$alpine_with_ldap" = "yes" ; then
     AC_RUN_IFELSE(
 	[AC_LANG_SOURCE([[
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 #include <ldap.h>
 int main(void) {
 
@@ -1238,61 +1456,6 @@ int main(void) {
 
   else
     AC_MSG_NOTICE([Cannot find LDAP functions!  Excluding LDAP support.])
-  fi
-fi
-
-dnl provide SSL support?
-if test "x$alpine_SSLTYPE" != "xnone" ; then
-  AC_SEARCH_LIBS(SSL_library_init,ssl,
-    [
-      LIBS="$LIBS -lssl"
-
-     AC_MSG_CHECKING([Openssl library version >= 1.0.0c])
-     AC_RUN_IFELSE(
-	[AC_LANG_SOURCE([[
-#include <stdio.h>
-#include <openssl/ssl.h>
-int main(void) {
-
-	if (OPENSSL_VERSION_NUMBER >= 0x1000003f)
-		exit(0);
-
-	exit(2);
-}
-	]])],
-	[
-		AC_MSG_RESULT(yes)
-	],
-	[
-		AC_MSG_ERROR(Install openssl version >= 1.0.1c)
-		exit 1
-	],
-	[
-		AC_MSG_WARN([cross compiling: not checking])
-	]
-    )
-    ],
-    [alpine_SSLTYPE="none"])
-  if test "x$alpine_SSLTYPE" = "xnone" ; then
-    AC_MSG_NOTICE([OpenSSL libraries NOT found])
-  else
-    AC_MSG_NOTICE([OpenSSL libraries FOUND])
-  fi
-fi
-
-dnl Crypto support is needed 
-if test "x$alpine_SSLTYPE" != "xnone" ; then
-  AC_SEARCH_LIBS(SSLeay,crypto,
-    [
-      LIBS="$LIBS -lcrypto"
-    ],
-    [
-      alpine_CRYPTO = "none"
-    ])
-  if test "x$alpine_CRYPTO" = "xnone" ; then
-    AC_MSG_ERROR(crypto library NOT found)
-  else
-    AC_MSG_NOTICE([crypto library found])
   fi
 fi
 
@@ -1355,14 +1518,17 @@ fi
 
 dnl check for tcl libraries for Web Alpine (HACKY)
 if test -n "$WEB_BUILD" ; then
-  AC_SEARCH_LIBS([Tcl_Eval],[$alpine_TCLLIB tcl8.5 tcl8.4 tcl8.3 tcl84 tcl83 tcl],,
+TCL_VERSIONS_DOT="tcl8.6 tcl8.5 tcl8.4 tcl8.3"
+TCL_VERSIONS_NODOT="`echo ${TCL_VERSIONS_DOT} | ${SED} 's/\.//g'`"
+TCL_VERSIONS="${TCL_VERSIONS_DOT} ${TCL_VERSIONS_NODOT} tcl"
+  AC_SEARCH_LIBS([Tcl_Eval],[$alpine_TCLLIB ${TCL_VERSIONS}],,
     [
       WEB_BUILD=
     ])
 
   dnl look for header file
   if test -n "$alpine_TCLINC" ; then
-    AC_CHECK_HEADER($alpine_TCLINC,,
+    AC_CHECK_HEADER($alpine_TCLINC/tcl.h,,
       [
 	WEB_BUILD=
       ])
@@ -1372,15 +1538,20 @@ if test -n "$WEB_BUILD" ; then
   else
     AC_CHECK_HEADER(tcl.h,,
       [
-	for dir in tcl8.5 tcl8.4 tcl8.3 tcl84 tcl83 ; do
-	  AC_CHECK_FILE([/usr/include/$dir/tcl.h],
+	for base in /usr /usr/local ; do
+	 for dir in ${TCL_VERSIONS} ; do
+	  AC_CHECK_FILE([$base/include/$dir/tcl.h],
 	    [
 	      found=yes
 	    ])
 	  if test "$found" = "yes" ; then
-	    CPPFLAGS="$CPPFLAGS -I/usr/include/$dir"
+	    CPPFLAGS="$CPPFLAGS -I$base/include/$dir"
 	    break
 	  fi
+	 done
+	 if test "$found" = "yes" ; then
+	    break
+	 fi
 	done
 	if test "$found" != "yes" ; then
 	    WEB_BUILD=
@@ -1391,7 +1562,7 @@ if test -n "$WEB_BUILD" ; then
 fi
 
 dnl Local or supplied regex?
-if test x$alpine_REGEX != "xyes" ; then
+if test "x$alpine_REGEX" != "xyes" ; then
   AC_SEARCH_LIBS([regcomp],posix regexp regex re,,
     [
       if test x$alpine_REGEX = "xno" ; then
@@ -1401,7 +1572,7 @@ if test x$alpine_REGEX != "xyes" ; then
       fi
     ])
 fi
-if test x$alpine_REGEX != "xyes" ; then
+if test "x$alpine_REGEX" != "xyes" ; then
   AC_CHECK_HEADER([regex.h],,
     [
       if test x$alpine_REGEX = "xno" ; then
@@ -1412,10 +1583,11 @@ if test x$alpine_REGEX != "xyes" ; then
     ])
 fi
 AC_DEFINE(HAVE_REGEX_H,1,[Regular expression header file exists])
-if test x$alpine_REGEX = "xyes" ; then
+if test "x$alpine_REGEX" = "xyes" ; then
   CPPFLAGS="$CPPFLAGS -I${top_builddir}/regex"
-  LDFLAGS="$LDFLAGS -L${top_builddir}/regex -lregex"
+  LDFLAGS="$LDFLAGS -L${top_builddir}/regex"
   REGEX_BUILD=regex
+  REGEX_MAKEFILE="$REGEX_BUILD/Makefile"
 fi
 
 if test "x$with_pthread" != "xno" ; then
@@ -1683,12 +1855,17 @@ else
     certdir="$alpine_SSLCERTS"
   elif test -n "$alpine_SSLDIR" -a -d "${alpine_SSLDIR}/certs" ; then
     certdir="${alpine_SSLDIR}/certs"
+  elif test -n "$alpine_SSLDIR" -a -d "${alpine_SSLDIR}/ssl/certs" ; then
+    certdir="${alpine_SSLDIR}/ssl/certs"
+  elif test -n "$alpine_SSLCERTS_ORIG" -a -d "$alpine_SSLCERTS_ORIG" ; then
+    certdir="$alpine_SSLCERTS_ORIG"
   else
     AC_MSG_NOTICE([SSL Problem: certificate directory not found])
   fi
 
   if test "x$with_smime" != "xno" ; then
     if test -n "$certdir" ; then
+      AC_MSG_NOTICE([* * * S/MIME support enabled])
       AC_DEFINE([SMIME], [], [Enable S/MIME code])
       AC_DEFINE_UNQUOTED([SMIME_SSLCERTS],"$certdir",[Directory where S/MIME CACerts are located])
     fi
@@ -1708,14 +1885,6 @@ else
     AC_MSG_NOTICE([* * *   in Alpine, this might be the reason for them.])
   fi
 
-  if test -n "$alpine_SSLDIR" ; then
-    c_client_specials="${c_client_specials}SSLDIR=$alpine_SSLDIR "
-  fi
-
-  if test -n "$alpine_SSLCERTS" ; then
-    c_client_specials="${c_client_specials}SSLCERTS=$alpine_SSLCERTS "
-  fi
-
   if test -n "$alpine_SSLINCLUDE" ; then
     c_client_specials="${c_client_specials}SSLINCLUDE=$alpine_SSLINCLUDE "
   fi
@@ -1724,6 +1893,17 @@ else
     c_client_specials="${c_client_specials}SSLLIB=$alpine_SSLLIB "
   fi
 
+  if test -n "$alpine_SSLDIR" ; then
+    c_client_specials="${c_client_specials}SSLDIR=$alpine_SSLDIR "
+  fi
+
+  if test -n "$certdir" ; then
+    c_client_specials="${c_client_specials}SSLCERTS=$certdir "
+  fi
+
+  if test -n "$alpine_SSLKEYS" ; then
+      c_client_specials="${c_client_specials}SSLKEYS=$alpine_SSLKEYS "
+  fi
 fi
 
 if test "x$alpine_GSSTYPE" != "xnone" ; then
@@ -1795,7 +1975,7 @@ AC_SUBST([WEB_PUBCOOKIE_LINK])
 AC_SUBST([AM_CFLAGS])
 AC_SUBST([AM_LDFLAGS])
 
-AC_CONFIG_FILES([m4/Makefile po/Makefile.in regex/Makefile \
+AC_CONFIG_FILES([m4/Makefile po/Makefile.in $REGEX_MAKEFILE \
 	  pith/osdep/Makefile pith/charconv/Makefile pith/Makefile \
 	  pico/osdep/Makefile pico/Makefile \
 	  alpine/osdep/Makefile alpine/Makefile \

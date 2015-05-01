@@ -3,7 +3,7 @@
  *
  * ========================================================================
  * Copyright 2006-2007 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,6 +90,7 @@ void	    sqzspaces(char *);
 void	    sqznewlines(char *);
 void	    removing_leading_white_space(char *);
 void	    removing_trailing_white_space(char *);
+void	    replace_tabs_by_space(char *);
 void	    removing_leading_and_trailing_white_space(char *);
 int 	    removing_double_quotes(char *);
 char	   *skip_white_space(char *);
@@ -146,6 +147,6 @@ STRLIST_S  *copy_strlist(STRLIST_S *);
 void	    combine_strlists(STRLIST_S **, STRLIST_S *);
 void	    free_strlist(STRLIST_S **);
 int         read_octal(char **);
-
+time_t      date_to_local_time_t(char *);
 
 #endif /* PITH_STRING_INCLUDED */

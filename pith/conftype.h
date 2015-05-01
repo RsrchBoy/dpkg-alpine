@@ -2,8 +2,8 @@
  * $Id: conftype.h 1155 2008-08-21 18:33:21Z hubert@u.washington.edu $
  *
  * ========================================================================
+ * Copyright 2013-2015 Eduardo Chappa
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,6 +108,7 @@ typedef	enum {    V_PERSONAL_NAME = 0
 		, V_MARGIN
 		, V_STATUS_MSG_DELAY
 		, V_ACTIVE_MSG_INTERVAL
+		, V_SLEEP
 		, V_MAILCHECK
 		, V_MAILCHECKNONCURR
 		, V_MAILDROPCHECK
@@ -351,6 +352,7 @@ typedef enum {
 	F_AUTO_INCLUDE_IN_REPLY,
 	F_DISABLE_CONFIG_SCREEN,
 	F_DISABLE_PASSWORD_CACHING,
+	F_DISABLE_PASSWORD_FILE_SAVING,
 	F_DISABLE_REGEX,
 	F_DISABLE_PASSWORD_CMD,
 	F_DISABLE_UPDATE_CMD,
@@ -543,6 +545,7 @@ typedef enum {
 	F_SIGN_DEFAULT_ON,
 	F_ENCRYPT_DEFAULT_ON,
 	F_REMEMBER_SMIME_PASSPHRASE,
+	F_USE_CERT_STORE_ONLY,
 #ifdef	APPLEKEYCHAIN
 	F_PUBLICCERTS_IN_KEYCHAIN,
 #endif
@@ -669,11 +672,22 @@ typedef enum {Main, Post, None} EditWhich;
 
 typedef enum {Directory, Container, Keychain, Nada} SmimeHolderType;
 
+typedef enum {Public, Private, CACert} WhichCerts;
+
+typedef struct certdata {
+  unsigned   deleted:1;		/* certificate is marked deleted	     */
+  unsigned   renew:1;		/* we must renew this list, set at top cert  */
+  char	     *date_from;	/* date from which certificate is valid      */
+  char	     *date_to;		/* date certificate expires		     */
+  char	     *md5;		/* MD5 Hash				     */
+} CertData;
+
 typedef struct certlist {
     char            *name;
     void            *x509_cert;		/* this is type (X509 *) */
+    CertData	    data;
     struct certlist *next;
-}CertList;
+} CertList;
 
 typedef struct smime_stuff {
     unsigned inited:1;
@@ -683,30 +697,66 @@ typedef struct smime_stuff {
     unsigned entered_passphrase:1;	/* user entered a passphrase */
     unsigned already_auto_asked:1;	/* asked for passphrase automatically, not again */
     volatile char passphrase[100];	/* storage for the entered passphrase */
-    char    *passphrase_emailaddr;	/* pointer to allocated storage */
+    char   **passphrase_emailaddr;	/* pointer to allocated storage */
 
     /*
      * If we are using the Container type it is easiest if we
      * read in and maintain a list of certs and then write them
      * out all at once. For Directory type we just leave the data
-     * in the individual files and read or write the individual
-     * files when needed, so we don't have a list of all the certs.
+     * in the individual files and read the list of files in the
+     * directory.
      */
     SmimeHolderType publictype;
     char           *publicpath;
     char           *publiccontent;
     CertList       *publiccertlist;
+    CertList       *backuppubliccertlist;
 
     SmimeHolderType privatetype;
     char           *privatepath;
     char           *privatecontent;
-    void           *personal_certs;	/* this is type (PERSONAL_CERT *) */
+    CertList	   *privatecertlist;
+    CertList	   *backupprivatecertlist;
+    void	   *backuppersonal_certs;	/* this is type (PERSONAL_CERT *) */
+    void           *personal_certs;		/* this is type (PERSONAL_CERT *) */
 
     SmimeHolderType catype;
     char           *capath;
     char           *cacontent;
+    CertList	   *cacertlist;
+    CertList	   *backupcacertlist;
 
 } SMIME_STUFF_S;
+
+#define BACKUPDATACERT(X) (((X) == Public ? ps_global->smime->backuppubliccertlist	\
+			 : ((X) == Private ? ps_global->smime->backupprivatecertlist	\
+			   : ps_global->smime->backupcacertlist)))
+
+#define DATACERT(X) (((X) == Public ? ps_global->smime->publiccertlist		\
+			 : ((X) == Private ? ps_global->smime->privatecertlist	\
+			   : ps_global->smime->cacertlist)))
+
+#define PATHCERTDIR(X) (((X) == Public ? ps_global->smime->publicpath	\
+			  : ((X) == Private ? ps_global->smime->privatepath	\
+			    : ((X) == CACert ? ps_global->smime->capath : NULL))))
+
+#define CONTENTCERTLIST(X) 	(((X) == Public ? ps_global->smime->publiccontent	\
+			  : ((X) == Private ? ps_global->smime->privatecontent	\
+			    : ((X) == CACert ? ps_global->smime->cacontent : NULL))))
+
+#define SMHOLDERTYPE(X) (((X) == Public ? ps_global->smime->publictype	\
+			  : ((X) == Private ? ps_global->smime->privatetype	\
+			    : ((X) == CACert ? ps_global->smime->catype : Nada))))
+
+#define EXTCERT(X)  (((X) == Public ? ".crt"		\
+			  : ((X) == Private ? ".key"	\
+				: ((X) == CACert ? ".crt" : ""))))
+
+#define DELETEDCERT(X)	((X)->data.deleted)
+#define RENEWCERT(X)	((X)->data.renew)
+#define DATEFROMCERT(X)	((X)->data.date_from)
+#define DATETOCERT(X)	((X)->data.date_to)
+#define MD5CERT(X)	((X)->data.md5)
 
 #endif /* SMIME */
 

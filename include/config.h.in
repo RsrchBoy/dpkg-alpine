@@ -51,6 +51,9 @@
 /* Default configuration value */
 #undef DF_CACERT_DIR
 
+/* Name of default certificate authority container */
+#undef DF_CA_CONTAINER
+
 /* Default configuration value */
 #undef DF_DEFAULT_FCC
 
@@ -99,8 +102,14 @@
 /* Default configuration value */
 #undef DF_PRIVATEKEY_DIR
 
+/* Name of default private container */
+#undef DF_PRIVATE_CONTAINER
+
 /* Default configuration value */
 #undef DF_PUBLICCERT_DIR
+
+/* Name of default public container */
+#undef DF_PUBLIC_CONTAINER
 
 /* Default configuration value */
 #undef DF_REMOTE_ABOOK_HISTORY
@@ -518,7 +527,7 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Password cache file (NOT secure. NOT recommended) */
+/* Password cache file (recommended if S/MIME is enabled and configured) */
 #undef PASSFILE
 
 /* Program users use to change their password */
@@ -532,6 +541,9 @@
 
 /* Default configuration value */
 #undef POSTPONED_MSGS
+
+/* ps command which outputs list of running commands */
+#undef PSEFCMD
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
@@ -578,6 +590,9 @@
 
 /* Simple spell checker: reads stdin, emits misspellings on stdout */
 #undef SPELLER
+
+/* SSL Supports TLSV1.2 */
+#undef SSL_SUPPORTS_TLSV1_2
 
 /* Define to 1 if the `S_IS*' macros in <sys/stat.h> do not work properly. */
 #undef STAT_MACROS_BROKEN

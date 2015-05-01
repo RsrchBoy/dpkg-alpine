@@ -4,8 +4,8 @@ static char rcsid[] = "$Id: filesys.c 770 2007-10-24 00:23:09Z hubert@u.washingt
 
 /*
  * ========================================================================
+ * Copyright 2013-2015 Eduardo Chappa
  * Copyright 2006-2007 University of Washington
- * Copyright 2013 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -662,7 +662,6 @@ our_getenv(char *env_variable)
       return(NULL);
 #endif /* !_WINDOWS */
 }
-
 
 int
 our_access(char *path, int mode)

@@ -5,7 +5,7 @@ static char rcsid[] = "$Id: remote.c 1032 2008-04-11 00:30:04Z hubert@u.washingt
 /*
  * ========================================================================
  * Copyright 2006-2008 University of Washington
- * Copyright 2013 Eduardo Chappa
+ * Copyright 2013-2015 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -248,7 +248,7 @@ rd_answer_forge_warning(int cmd, MSGNO_S *msgmap, SCROLL_S *sparms)
 	break;
 
       default:
-	panic("Unexpected command in rd_answer_forge_warning");
+	alpine_panic("Unexpected command in rd_answer_forge_warning");
 	break;
     }
 

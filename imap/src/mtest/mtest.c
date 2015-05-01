@@ -1,13 +1,5 @@
 /* ========================================================================
- * Copyright 1988-2007 University of Washington
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * 
+ * Copyright 2008-2010 Mark Crispin
  * ========================================================================
  */
 
@@ -15,15 +7,19 @@
  * Program:	Mail library test program
  *
  * Author:	Mark Crispin
- *		Networks and Distributed Computing
- *		Computing & Communications
- *		University of Washington
- *		Administration Building, AG-44
- *		Seattle, WA  98195
- *		Internet: MRC@CAC.Washington.EDU
  *
  * Date:	8 July 1988
- * Last Edited:	5 November 2007
+ * Last Edited:	8 April 2011
+ *
+ * Previous versions of this file were
+ *
+ * Copyright 1988-2007 University of Washington
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * This original version of this file is
  * Copyright 1988 Stanford University
@@ -81,7 +77,7 @@ void overview_header (MAILSTREAM *stream,unsigned long uid,OVERVIEW *ov,
 void header (MAILSTREAM *stream,long msgno);
 void display_body (BODY *body,char *pfx,long i);
 void status (MAILSTREAM *stream);
-void prompt (char *msg,char *txt);
+void prompt (char *msg,char *txt, int buflen);
 void smtptest (long debug);
 
 /* Main program - initialization */
@@ -90,7 +86,7 @@ int main ()
 {
   MAILSTREAM *stream = NIL;
   void *sdb = NIL;
-  char *s,tmp[MAILTMPLEN];
+  char *s,tmp[MAILTMPLEN],tmpx[MAILTMPLEN];
   long debug;
 #include "linkage.c"
 #if MACOS
@@ -118,21 +114,21 @@ int main ()
 #endif
   curhst = cpystr (mylocalhost ());
   puts ("MTest -- C client test program");
-  if (!*personalname) prompt ("Personal name: ",personalname);
+  if (!*personalname) prompt ("Personal name: ",personalname, sizeof(personalname));
 				/* user wants protocol telemetry? */
-  prompt ("Debug protocol (y/n)?",tmp);
+  prompt ("Debug protocol (y/n)?",tmp, sizeof(tmp));
   ucase (tmp);
   debug = (tmp[0] == 'Y') ? T : NIL;
   do {
-    prompt ("Mailbox ('?' for help): ",tmp);
+    prompt ("Mailbox ('?' for help): ",tmp, sizeof(tmp));
     if (!strcmp (tmp,"?")) {
       puts ("Enter INBOX, mailbox name, or IMAP mailbox as {host}mailbox");
       puts ("Known local mailboxes:");
       mail_list (NIL,NIL,"%");
-      if (s = sm_read (&sdb)) {
+      if (s = sm_read (tmpx,&sdb)) {
 	puts ("Local subscribed mailboxes:");
 	do (mm_lsub (NIL,NIL,s,NIL));
-	while (s = sm_read (&sdb));
+	while (s = sm_read (tmpx,&sdb));
       }
       puts ("or just hit return to quit");
     }
@@ -153,14 +149,14 @@ int main ()
 void mm (MAILSTREAM *stream,long debug)
 {
   void *sdb = NIL;
-  char cmd[MAILTMPLEN];
-  char *s,*arg;
+  char cmd[MAILTMPLEN],tmp[MAILTMPLEN];
+  char *s, *arg;
   unsigned long i;
   unsigned long last = 0;
   BODY *body;
   status (stream);		/* first report message status */
   while (stream) {
-    prompt ("MTest>",cmd);	/* prompt user, get command */
+    prompt ("MTest> ",cmd, sizeof(cmd)); /* prompt user, get command */
 				/* get argument */
     if (arg = strchr (cmd,' ')) *arg++ = '\0';
     switch (*ucase (cmd)) {	/* dispatch based on command */
@@ -202,10 +198,10 @@ void mm (MAILSTREAM *stream,long debug)
     case 'F':			/* Find command */
       if (!arg) {
 	arg = "%";
-	if (s = sm_read (&sdb)) {
+	if (s = sm_read (tmp,&sdb)) {
 	  puts ("Local network subscribed mailboxes:");
 	  do if (*s == '{') (mm_lsub (NIL,NIL,s,NIL));
-	  while (s = sm_read (&sdb));
+	  while (s = sm_read (tmp,&sdb));
 	}
       }
       puts ("Subscribed mailboxes:");
@@ -255,7 +251,7 @@ void mm (MAILSTREAM *stream,long debug)
       }
 				/* get the new mailbox */
       while (!(stream = mail_open (stream,arg,debug))) {
-	prompt ("Mailbox: ",arg);
+	prompt ("Mailbox: ",arg, sizeof(arg));
 	if (!arg[0]) break;
       }
       last = 0;
@@ -344,10 +340,22 @@ void mm (MAILSTREAM *stream,long debug)
     case '-':
       mail_nodebug (stream); debug = NIL;
       break;
+    case '#':
+      {
+	NAMESPACE *ns;
+	NAMESPACE **nslist = (NAMESPACE **) mail_parameters (stream,GET_NAMESPACE,NIL);
+	static char *nstypes[] = {"Personal", "Other User", "Shared"};
+	for(i = 0; i < 3; ++i) {
+	  puts(nstypes[i]);
+	  for(ns = nslist[i]; ns; ns = ns->next)
+	    printf(" namespace = %s, delimeter = %c\n", ns->name, ns->delimiter);
+	}
+      }
+      break;
     case '?':			/* ? command */
       puts ("Body, Check, Delete, Expunge, Find, GC, Headers, Literal,");
       puts (" MailboxStatus, New Mailbox, Overview, Ping, Quit, Send, Type,");
-      puts ("Undelete, Xit, +, -, or <RETURN> for next message");
+      puts ("Undelete, Xit, #Namespace, +, -, or <RETURN> for next message");
       break;
     default:			/* bogus command */
       printf ("?Unrecognized command: %s\n",cmd);
@@ -592,10 +600,14 @@ void status (MAILSTREAM *stream)
  *          pointer to input buffer
  */
 
-void prompt (char *msg,char *txt)
+void prompt (char *msg,char *txt, int buflen)
 {
   printf ("%s",msg);
-  gets (txt);
+  fgets (txt, buflen-1, stdin);
+  if(txt[strlen(txt)-1] == '\012')
+      txt[strlen(txt)-1] = '\0';
+  if(txt[strlen(txt)-1] == '\015')
+      txt[strlen(txt)-1] = '\0';
 }
 
 /* Interfaces to C-client */
@@ -758,14 +770,14 @@ void smtptest (long debug)
   msg->return_path = mail_newaddr ();
   msg->return_path->mailbox = cpystr (curusr);
   msg->return_path->host = cpystr (curhst);
-  prompt ("To: ",line);
+  prompt ("To: ",line, sizeof(line));
   rfc822_parse_adrlist (&msg->to,line,curhst);
   if (msg->to) {
-    prompt ("cc: ",line);
+    prompt ("cc: ",line, sizeof(line));
     rfc822_parse_adrlist (&msg->cc,line,curhst);
   }
   else {
-    prompt ("Newsgroups: ",line);
+    prompt ("Newsgroups: ",line, sizeof(line));
     if (*line) msg->newsgroups = cpystr (line);
     else {
       mail_free_body (&body);
@@ -774,12 +786,16 @@ void smtptest (long debug)
       return;
     }
   }
-  prompt ("Subject: ",line);
+  prompt ("Subject: ",line, sizeof(line));
   msg->subject = cpystr (line);
   puts (" Msg (end with a line with only a '.'):");
   body->type = TYPETEXT;
   *text = '\0';
-  while (gets (line)) {
+  while (fgets(line, sizeof(line)-1, stdin)){
+    if(line[strlen(line)-1] == '\012')
+      line[strlen(line)-1] = '\0';
+    if(line[strlen(line)-1] == '\015')
+      line[strlen(line)-1] = '\0';
     if (line[0] == '.') {
       if (line[1] == '\0') break;
       else strcat (text,".");

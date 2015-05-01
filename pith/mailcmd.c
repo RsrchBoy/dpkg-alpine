@@ -4,8 +4,8 @@ static char rcsid[] = "$Id: mailcmd.c 1142 2008-08-13 17:22:21Z hubert@u.washing
 
 /*
  * ========================================================================
+ * Copyright 2013-2015 Eduardo Chappa
  * Copyright 2006-2007 University of Washington
- * Copyright 2013 Eduardo Chappa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -281,7 +281,7 @@ cmd_undelete(struct pine *state, MSGNO_S *msgmap, int copts)
 
 
 int
-cmd_expunge_work(MAILSTREAM *stream, MSGNO_S *msgmap)
+cmd_expunge_work(MAILSTREAM *stream, MSGNO_S *msgmap, char *seq)
 {
     long  old_max_msgno;
     int	  rv = 0;
@@ -289,7 +289,7 @@ cmd_expunge_work(MAILSTREAM *stream, MSGNO_S *msgmap)
     old_max_msgno = mn_get_total(msgmap);
     delete_filtered_msgs(stream);
     ps_global->expunge_in_progress = 1;
-    mail_expunge(stream);
+    mail_expunge_full(stream, seq, 0);
     ps_global->expunge_in_progress = 0;
 
     dprint((2,"expunge complete cur:%ld max:%ld\n",
@@ -755,7 +755,7 @@ do_broach_folder(char *newfolder, CONTEXT_S *new_context, MAILSTREAM **streamp,
 
     snprintf(status_msg, sizeof(status_msg), "%sOpening \"", do_reopen ? "Re-" : "");
     fname = folder_name_decoded((unsigned char *)newfolder);
-    strncat(status_msg, pretty_fn(fname ? (char*) fname : newfolder),
+    strncat(status_msg, pretty_fn(fname ? (char *) fname : newfolder),
 	    sizeof(status_msg)-strlen(status_msg) - 2);
     if(fname) fs_give((void **)&fname);
     status_msg[sizeof(status_msg)-2] = '\0';
@@ -861,7 +861,8 @@ do_broach_folder(char *newfolder, CONTEXT_S *new_context, MAILSTREAM **streamp,
 			if(IS_NEWS(ps_global->mail_stream)
 			   && ps_global->mail_stream->rdonly)
 			  msgno_exclude_deleted(ps_global->mail_stream,
-					    sp_msgmap(ps_global->mail_stream));
+					    sp_msgmap(ps_global->mail_stream),
+					    NULL);
 
 			if(mn_get_total(ps_global->msgmap) > 0)
 			  mn_set_cur(ps_global->msgmap,
@@ -996,7 +997,7 @@ do_broach_folder(char *newfolder, CONTEXT_S *new_context, MAILSTREAM **streamp,
      * hidden from view...
      */
     if(IS_NEWS(ps_global->mail_stream) && ps_global->mail_stream->rdonly)
-      msgno_exclude_deleted(ps_global->mail_stream, ps_global->msgmap);
+      msgno_exclude_deleted(ps_global->mail_stream, ps_global->msgmap, NULL);
 
     if(we_cancel && F_OFF(F_QUELL_FILTER_MSGS, ps_global))
       cancel_busy_cue(0);
@@ -1249,7 +1250,7 @@ first_recent:
 		break;
 
 	      default:
-		panic("Unexpected incoming startup case");
+		alpine_panic("Unexpected incoming startup case");
 		break;
 
 	    }
@@ -1468,8 +1469,11 @@ expunge_and_close(MAILSTREAM *stream, char **final_msg, long unsigned int flags)
 		       && context_isambig(folder))){
 		    ret = 'y';
 		}
-		else if(pith_opt_expunge_prompt)
-		  ret = (*pith_opt_expunge_prompt)(stream, pretty_fn(folder), delete_count);
+		else if(pith_opt_expunge_prompt){
+		  unsigned char *fname = folder_name_decoded((unsigned char *)folder);
+		  ret = (*pith_opt_expunge_prompt)(stream, pretty_fn((char *)fname), delete_count);
+		  if(fname) fs_give((void **) &fname);
+		}
 
 		/* get this message back in queue */
 		if(moved_msg)
@@ -1478,6 +1482,7 @@ expunge_and_close(MAILSTREAM *stream, char **final_msg, long unsigned int flags)
 
 		if(ret == 'y'){
 		    long filtered;
+		    unsigned char *fname = folder_name_decoded((unsigned char *)folder);
 
 		    filtered = any_lflagged(sp_msgmap(stream), MN_EXLD);
 
@@ -1486,13 +1491,14 @@ expunge_and_close(MAILSTREAM *stream, char **final_msg, long unsigned int flags)
 			no_close ? "" : "Clos",
 			no_close ? "" : ing,
 			no_close ? "" : " \"",
-	 		no_close ? "" : pretty_fn(folder),
+	 		no_close ? "" : pretty_fn((char *)fname),
 			no_close ? "" : "\". ",
 			final_msg ? "Kept" : "Keeping",
 			comatose(stream->nmsgs - filtered - delete_count),
 			plural(stream->nmsgs - filtered - delete_count),
 			ing,
 			long2string(delete_count));
+		    if(fname) fs_give((void **)&fname);
 		    if(final_msg)
 		      *final_msg = cpystr(buff2);
 		    else
@@ -1565,11 +1571,12 @@ expunge_and_close(MAILSTREAM *stream, char **final_msg, long unsigned int flags)
 		}
 
 		if(!no_close){
+		    unsigned char *fname = folder_name_decoded((unsigned char *)folder);
 		    if(stream->nmsgs){
 			snprintf(buff2, sizeof(buff2),
 			    "Clos%s folder \"%.*s\". %s%s%s message%s.",
 			    ing,
-			    sizeof(buff2)-50, pretty_fn(folder), 
+			    sizeof(buff2)-50, pretty_fn((char *) fname), 
 			    final_msg ? "Kept" : "Keeping",
 			    (stream->nmsgs == 1L) ? " single" : " all ",
 			    (stream->nmsgs > 1L)
@@ -1578,8 +1585,9 @@ expunge_and_close(MAILSTREAM *stream, char **final_msg, long unsigned int flags)
 		    }
 		    else{
 			snprintf(buff2, sizeof(buff2), "Clos%s empty folder \"%.*s\"",
-			    ing, sizeof(buff2)-50, pretty_fn(folder));
+			    ing, sizeof(buff2)-50, pretty_fn((char *) fname));
 		    }
+		    if(fname) fs_give((void **)&fname);
 
 		    if(final_msg)
 		      *final_msg = cpystr(buff2);
@@ -1625,7 +1633,9 @@ expunge_and_close(MAILSTREAM *stream, char **final_msg, long unsigned int flags)
 			delete_count++;
 
 		    if(delete_count && pith_opt_expunge_prompt){
-			ret = (*pith_opt_expunge_prompt)(stream, pretty_fn(folder), delete_count);
+			unsigned char *fname = folder_name_decoded((unsigned char *)folder);
+			ret = (*pith_opt_expunge_prompt)(stream, pretty_fn((char *) fname), delete_count);
+			if(fname) fs_give((void **)&fname);
 			if(ret == 'y'){
 			    char seq[64];
 
@@ -1638,10 +1648,13 @@ expunge_and_close(MAILSTREAM *stream, char **final_msg, long unsigned int flags)
 		if(F_ON(F_NEWS_CROSS_DELETE, ps_global))
 		  cross_delete_crossposts(stream);
 	    }
-            else
+            else{
+	      unsigned char *fname = folder_name_decoded((unsigned char *)folder);
 	      snprintf(buff2, sizeof(buff2),
 			"Clos%s read-only folder \"%.*s\". No changes to save",
-			ing, sizeof(buff2)-60, pretty_fn(folder));
+			ing, sizeof(buff2)-60, pretty_fn((char *) fname));
+	      if(fname) fs_give((void **)&fname);
+	    }
 
 	    if(final_msg)
 	      *final_msg = cpystr(buff2);
