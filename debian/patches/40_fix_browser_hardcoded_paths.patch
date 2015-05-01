@@ -1,0 +1,90 @@
+Description: Fix hardcoded paths from /usr/local/bin/netscape and /usr/local/bin/lynx
+             to /usr/bin/sensible-browser and /usr/bin/lynx.
+Author: Unit 193 <unit193@ubuntu.com>
+
+Origin: vendor
+Forwarded: no
+Last-Update: 2015-05-01
+
+Index: alpine/doc/tech-notes/config.html
+===================================================================
+--- alpine.orig/doc/tech-notes/config.html
++++ alpine/doc/tech-notes/config.html
+@@ -4227,16 +4227,16 @@ Now for an example:
+ 
+ <BLOCKQUOTE>
+     <CODE>
+-    url-viewers=_TEST("test -n '$&#123;DISPLAY}'")_  /usr/local/bin/netscape,
+-		/usr/local/bin/lynx,
++    url-viewers=_TEST("test -n '$&#123;DISPLAY}'")_  /usr/bin/sensible-browser,
++		/usr/bin/lynx,
+ 		C:&#92;BIN&#92;NETSCAPE.BAT </CODE><BR>
+ </BLOCKQUOTE>
+ 
+ This example shows that for the first browser in the list to be used the
+ environment variable <CODE>DISPLAY</CODE> must be defined.
+-If it is, then the file <CODE>/usr/local/bin/netscape</CODE> must exist.
++If it is, then the file <CODE>/usr/bin/sensible-browser</CODE> must exist.
+ If either condition is not met, then the file
+-<CODE>/usr/local/bin/lynx</CODE> must exist.
++<CODE>/usr/bin/lynx</CODE> must exist.
+ If it doesn't, then the final path and file must
+ exist. Note that the last entry is a DOS/Windows path. This is one way
+ to support <EM>Alpine</EM> running on more than one architecture with the same
+Index: alpine/doc/tech-notes/tech-notes.txt
+===================================================================
+--- alpine.orig/doc/tech-notes/tech-notes.txt
++++ alpine/doc/tech-notes/tech-notes.txt
+@@ -4166,12 +4166,12 @@ m+4TJybNGNfAgOctSkEyY/OCb49fRRQTCBZVIhzL
+           relative to your home directory).
+           Now for an example:
+ 
+-     url-viewers=_TEST("test -n '${DISPLAY}'")_ /usr/local/bin/netscape,
+-     /usr/local/bin/lynx, C:\BIN\NETSCAPE.BAT
++     url-viewers=_TEST("test -n '${DISPLAY}'")_ /usr/bin/sensible-browser,
++     /usr/bin/lynx, C:\BIN\NETSCAPE.BAT
+           This example shows that for the first browser in the list to be
+           used the environment variable DISPLAY must be defined. If it is,
+-          then the file /usr/local/bin/netscape must exist. If either
+-          condition is not met, then the file /usr/local/bin/lynx must
++          then the file /usr/bin/sensible-browser must exist. If either
++          condition is not met, then the file /usr/bin/lynx must
+           exist. If it doesn't, then the final path and file must exist.
+           Note that the last entry is a DOS/Windows path. This is one way
+           to support _Alpine_ running on more than one architecture with
+Index: alpine/pith/pine.hlp
+===================================================================
+--- alpine.orig/pith/pine.hlp
++++ alpine/pith/pine.hlp
+@@ -26882,16 +26882,16 @@ argument (see the &quot;lynx&quot; examp
+ <P>
+ So, here are some example entries:
+ <PRE>
+-url-viewers = _TEST(&quot;test -n '$&#123;DISPLAY}'&quot;)_  /usr/local/bin/netscape
+-              &quot;/usr/local/bin/lynx _URL_&quot;
++url-viewers = _TEST(&quot;test -n '$&#123;DISPLAY}'&quot;)_  /usr/bin/sensible-browser
++              &quot;/usr/bin/lynx _URL_&quot;
+               C:&#92;BIN&#92;NETSCAPE.BAT
+ </PRE>
+ <P>
+ This example shows that for the first viewer in the list to be used
+ the environment variable &quot;DISPLAY&quot; must be defined.  If it
+-is, then the path and file &quot;/usr/local/bin/netscape&quot; must exist.  
++is, then the path and file &quot;/usr/bin/sensible-browser&quot; must exist.  
+ If neither condition is met,
+-then the path and file &quot;/usr/local/bin/lynx&quot; must exist.  
++then the path and file &quot;/usr/bin/lynx&quot; must exist.  
+ If it does, then the &quot;_URL_&quot; token is replaced by the selected URL. 
+ If the path to &quot;lynx&quot; is invalid,
+ then the final path and file C:&#92;BIN&#92;NETSCAPE.BAT must exist.  
+@@ -26986,8 +26986,8 @@ because of its length, but should all ap
+ <P>
+ url-viewers = _TEST("test -L /myhomedir/.netscape/lock")_ &quot;/usr/local/bin/netscape -remote 'openURL(_URL_,  new-window)' &amp;&quot;<BR>
+ 
+-_TEST(&quot;test -n '$&#123;DISPLAY}'&quot;)_ &quot;/usr/local/bin/netscape &amp;&quot;<BR>
+-              &quot;/usr/local/bin/lynx '_URL_'&quot;
++_TEST(&quot;test -n '$&#123;DISPLAY}'&quot;)_ &quot;/usr/bin/sensible-browser &amp;&quot;<BR>
++              &quot;/usr/bin/lynx '_URL_'&quot;
+ <P>
+ <!--chtml endif-->
+ <P>
