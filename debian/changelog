@@ -1,3 +1,21 @@
+alpine (2.20+dfsg1-1) UNRELEASED; urgency=medium
+
+  * Imported Upstream version 2.20+dfsg1
+    - Drop patches applied upstream.
+    - Refresh remaining patches.
+    - d/rules: Update SHA256 for alpine 2.20.
+  * Update Standards-Version to 3.9.6.
+  * d/watch: Narrow the regex to only match source tarballs.
+  * d/alpine-doc.docs: tech-notes.txt moved to under the tech-notes/ dir.
+  * d/control: Update Vcs-Browser for cgit.
+  * d/p/10_alpine_1.10_spooldir.patch: Fix a few more references.
+  * d/p/40_fix_browser_hardcoded_paths.patch:
+    - Fix hardcoded paths to specific browsers.
+  * d/p/40_fix_tech_notes_hardcoded_paths.patch, d/rules:
+    - Drop patch in favor of changing paths after the build.
+
+ -- Unit 193 <unit193@ubuntu.com>  Fri, 01 May 2015 19:52:36 -0400
+
 alpine (2.11+dfsg1-3) unstable; urgency=medium
 
   [ Unit 193 ]
