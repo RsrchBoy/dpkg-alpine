@@ -30,9 +30,10 @@ override_dh_install:
 override_dh_installdocs:
 	dh_installdocs
 	# Change /usr/local/ config paths to /etc
-	sed -i  -e s@/usr/local/lib/pine@/etc/pine@g \
-		-e s@/usr/local/pine@/etc/pine@g \
-		debian/alpine-doc/usr/share/doc/alpine-doc/tech-notes/*
+	# Some buildds don't build arch 'all' packages.
+	[ ! -d debian/alpine-doc ] || sed -i  -e s@/usr/local/lib/pine@/etc/pine@g \
+					-e s@/usr/local/pine@/etc/pine@g \
+					debian/alpine-doc/usr/share/doc/alpine-doc/tech-notes/*
 
 override_dh_installman:
 	dh_installman
