@@ -1,3 +1,9 @@
+alpine (2.20+dfsg1-1~14.04~ppa1) trusty; urgency=medium
+
+  * Build for trusty.
+
+ -- Chris Weyl <cweyl@alumni.drew.edu>  Tue, 16 Feb 2016 20:18:38 -0600
+
 alpine (2.20+dfsg1-1) UNRELEASED; urgency=medium
 
   * Imported Upstream version 2.20+dfsg1
