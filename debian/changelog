@@ -1,3 +1,9 @@
+alpine (2.20+dfsg1-1.1~14.04~ppa1) trusty; urgency=medium
+
+  * Build for trusty.
+
+ -- Chris Weyl <cweyl@alumni.drew.edu>  Mon, 22 Feb 2016 14:19:13 -0600
+
 alpine (2.20+dfsg1-1.1) UNRELEASED; urgency=medium
 
   * Non-maintainer upload.
